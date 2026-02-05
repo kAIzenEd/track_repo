@@ -1,138 +1,88 @@
 # 🎙️ kAI Track
 
-**kAI Track** is a local-first AI meeting assistant that converts audio recordings into readable meeting transcripts with timestamps.
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3120/)
+[![WhisperX](https://img.shields.io/badge/AI-WhisperX-red.svg)](https://github.com/m-bain/whisperx)
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-The goal of this project is to build an end-to-end workflow for:
-
-- Audio transcription  
-- Speaker separation (diarization)  
-- Meeting summarization  
-- Action item extraction  
-- Task assignment  
-
-Currently, the project supports **local transcription** using WhisperX.
+**kAI Track** is a local-first AI meeting assistant that converts audio recordings into readable meeting transcripts with timestamps. It eliminates the need for manual note-taking by providing a structured, searchable record of your discussions.
 
 ---
 
 ## ✨ Features
 
-### ✅ Audio Transcription (Implemented)
+### ✅ Current Capabilities
+* **High-Accuracy Transcription:** Converts `.wav` and `.mp3` recordings into text using Whisper Large V3 Turbo.
+* **Precise Timestamps:** Adds start/end times to every segment for easy reference.
+* **Privacy-First:** All processing happens locally on your machine—no cloud uploads required.
+* **VAD Integration:** Uses Silero VAD to intelligently skip silent portions of audio.
 
-- Converts `.wav` and `.mp3` meeting recordings into text
-- Adds timestamps to each spoken segment
-- Runs locally using GPU (if available)
-
-Example output:
-
-[0.00 - 2.50] Hello everyone
-[2.51 - 6.10] Thanks for joining today's meeting
-
-
----
-
-## 🛠 Technologies Used
-
-- **WhisperX** — Speech-to-text transcription pipeline  
-- **Whisper Large V3 Turbo** — Open-source transcription model  
-- **PyTorch** — Deep learning runtime  
-- **CUDA (optional)** — GPU acceleration  
-- **Silero VAD** — Skips silent parts of audio  
+### 🛠️ Coming Soon (Roadmap)
+* **Speaker Diarization:** Identify and label unique voices (Speaker A, Speaker B).
+* **AI Summarization:** Generate "Too Long; Didn't Read" (TL;DR) meeting abstracts.
+* **Action Item Extraction:** Automatically detect tasks and assignments.
+* **Task Manager UI:** A dedicated dashboard to track and edit assigned responsibilities.
 
 ---
 
 ## 📂 Project Structure
 
+```text
 kAI_track/
-│
 ├── backend/
-│ ├── services/
-│ │ └── transcribe.py # Core transcription logic
-│ │
-│ ├── storage/
-│ │ ├── audio/ # Place audio files here
-│ │ └── transcripts/ # Transcript outputs (later)
-│ │
-│ └── test_transcribe.py # Test runner script
-│
-├── frontend/ # UI will be added later
-│
+│   ├── services/
+│   │   └── transcribe.py    # Core transcription logic (WhisperX)
+│   ├── storage/
+│   │   ├── audio/           # Input directory for .wav/.mp3 files
+│   │   └── transcripts/     # JSON/Text output destination
+│   └── test_transcribe.py   # CLI Test runner script
+├── frontend/                # [Planned] React/FastAPI Dashboard
 └── README.md
+⚙️ Setup Instructions
+Prerequisites
+Python 3.12
 
+FFmpeg: Required for audio processing.
 
----
+NVIDIA GPU (Recommended): Ensure CUDA drivers are installed for 10x faster transcription.
 
-## ✅ Requirements
+Option 1: WSL Ubuntu (Recommended)
+Open WSL:
 
-- Python **3.12**
-- NVIDIA GPU (optional, but recommended)
-- Audio formats supported: **WAV, MP3**
-
----
-
-# ⚙️ Setup Instructions
-
-## Option 1 — Setup in WSL Ubuntu (Recommended)
-
-### Step 1: Open WSL
-
-```bash
+Bash
 wsl
-Step 2: Go to the project folder
 cd /mnt/c/Users/Admin/Desktop/Python/kAI_track
-Step 3: Activate your virtual environment
+Activate Environment:
+
+Bash
 source ../venv/bin/activate
-You should see:
+Install Dependencies:
 
-(venv) jordan@...
-Step 4: Install dependencies (using uv)
+Bash
 uv pip install "numpy<2"
-
 uv pip install torch==2.5.1 torchaudio==2.5.1
+uv pip install git+[https://github.com/m-bain/whisperx.git](https://github.com/m-bain/whisperx.git) --no-deps
+Option 2: Windows CMD / PowerShell
+Navigate to Project:
 
-uv pip install git+https://github.com/m-bain/whisperx.git --no-deps
-Option 2 — Setup in Windows CMD / PowerShell
-Step 1: Open Command Prompt
-Press:
-
-Win + R → cmd
-Step 2: Go to the project folder
+DOS
 cd C:\Users\Admin\Desktop\Python\kAI_track
-Step 3: Activate virtual environment
 ..\venv\Scripts\activate
-You should see:
+Install Dependencies:
 
-(venv)
-Step 4: Install dependencies
+DOS
 uv pip install "numpy<2"
-
 uv pip install torch==2.5.1 torchaudio==2.5.1
-
-uv pip install git+https://github.com/m-bain/whisperx.git --no-deps
+uv pip install git+[https://github.com/m-bain/whisperx.git](https://github.com/m-bain/whisperx.git) --no-deps
 ▶️ Running Transcription
-Step 1: Add an audio file
-Place a .wav or .mp3 file inside:
+Add Audio: Place your file (e.g., meeting.wav) in backend/storage/audio/.
 
-backend/storage/audio/
-Example:
+Execute Runner:
 
-backend/storage/audio/test.wav
-Step 2: Run the test script
-From the root project folder:
-
-In WSL:
+Bash
 python backend/test_transcribe.py
-In Windows CMD:
-python backend\test_transcribe.py
-Expected Output
-[0.00 - 3.20] Hello everyone
-[3.21 - 6.50] Welcome to the meeting
-...
-Notes
-Transcription accuracy depends on audio clarity
+Check Output: The console will display the timestamped segments:
 
-Multi-speaker recordings may be less accurate until diarization is added
-
-GPU support improves speed significantly
-
-License
-This project uses open-source models and libraries (WhisperX, Whisper, PyTorch).
+Plaintext
+[0.00 - 2.50] Hello everyone.
+[2.51 - 6.10] Thanks for joining today's meeting.
