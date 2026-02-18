@@ -1,4 +1,6 @@
-```md
+# kAI Track
+
+> ```md
 # kAI Track
 
 kAI Track is an AI-driven meeting assistant MVP that transcribes meeting audio into structured text with timestamps, stores meeting history, and provides a foundation for upcoming features like speaker diarization, summarization, and action-item extraction.
@@ -189,7 +191,12 @@ Make sure the backend is running before uploading files.
 
 ---
 
-
-- Speaker diarization integration
-- Speaker-to-text mapping inside transcripts
 ```
+
+![License](https://img.shields.io/badge/license-MIT-green) ![Version](https://img.shields.io/badge/version-1.0.0-blue) ![Language](https://img.shields.io/badge/language-Python, Javascript-yellow) ![Framework](https://img.shields.io/badge/framework-React, Vite, FastAPI-orange)
+
+## ℹ️ Project Information
+
+- **👤 Author:** Rahul Jordan Chandra
+- **📦 Version:** 1.0.0
+- **📄 License:** MIT
