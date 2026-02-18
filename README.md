@@ -1,88 +1,208 @@
-# 🎙️ kAI Track
 
-[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3120/)
-[![WhisperX](https://img.shields.io/badge/AI-WhisperX-red.svg)](https://github.com/m-bain/whisperx)
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+```md
+# kAI Track
 
-**kAI Track** is a local-first AI meeting assistant that converts audio recordings into readable meeting transcripts with timestamps. It eliminates the need for manual note-taking by providing a structured, searchable record of your discussions.
+kAI Track is an AI-driven meeting assistant MVP that transcribes meeting audio into structured text with timestamps, stores meeting history, and provides a foundation for upcoming features like speaker diarization, summarization, and action-item extraction.
 
----
-
-## ✨ Features
-
-### ✅ Current Capabilities
-* **High-Accuracy Transcription:** Converts `.wav` and `.mp3` recordings into text using Whisper Large V3 Turbo.
-* **Precise Timestamps:** Adds start/end times to every segment for easy reference.
-* **Privacy-First:** All processing happens locally on your machine—no cloud uploads required.
-* **VAD Integration:** Uses Silero VAD to intelligently skip silent portions of audio.
-
-### 🛠️ Coming Soon (Roadmap)
-* **Speaker Diarization:** Identify and label unique voices (Speaker A, Speaker B).
-* **AI Summarization:** Generate "Too Long; Didn't Read" (TL;DR) meeting abstracts.
-* **Action Item Extraction:** Automatically detect tasks and assignments.
-* **Task Manager UI:** A dedicated dashboard to track and edit assigned responsibilities.
+This project is being built as a local-first prototype with a FastAPI backend, SQLite storage, and a React-based frontend for testing and iteration.
 
 ---
 
-## 📂 Project Structure
+## Current Features (Sprint 1 Complete)
 
-```text
+- Audio upload and transcription using Whisper (accurate and fast modes)
+- Timestamped transcript segmentation
+- Automatic saving of transcripts to:
+  - Local JSON files
+  - SQLite database
+- Meeting history API endpoints
+- React MVP dashboard:
+  - Drag-and-drop audio upload
+  - Transcript display in a structured table
+  - Meeting archive sidebar with transcript retrieval
+
+---
+
+## Upcoming Features (Sprint 2 and Beyond)
+
+- Speaker diarization ("who said what")
+- Speaker labeling and renaming in the UI
+- Meeting summarization using LLMs
+- Action-item extraction and assignment
+- Task manager integration and workflow completion
+
+---
+
+## Project Structure
+
+```
+
 kAI_track/
+│
 ├── backend/
+│   ├── main.py                # FastAPI entrypoint
+│   ├── db.py                  # Database engine + session
+│   ├── models.py              # SQLAlchemy meeting model
+│   ├── init_db.py             # Initializes SQLite database
+│   │
 │   ├── services/
-│   │   └── transcribe.py    # Core transcription logic (WhisperX)
+│   │   └── transcribe.py       # Whisper transcription logic
+│   │
 │   ├── storage/
-│   │   ├── audio/           # Input directory for .wav/.mp3 files
-│   │   └── transcripts/     # JSON/Text output destination
-│   └── test_transcribe.py   # CLI Test runner script
-├── frontend/                # [Planned] React/FastAPI Dashboard
-└── README.md
-⚙️ Setup Instructions
-Prerequisites
-Python 3.12
+│       ├── kai_track.db        # SQLite database file
+│       ├── audio/              # Uploaded audio files
+│       └── transcripts/        # Saved transcript JSON outputs
+│
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx             # Main UI orchestration
+│   │   ├── App.css             # Liquid-glass style UI base
+│   │   ├── index.css           # Global styling
+│   │   │
+│   │   ├── api/
+│   │   │   └── backend.js       # Backend request helpers
+│   │   │
+│   │   └── components/
+│   │       ├── UploadBox.jsx
+│   │       ├── MeetingSidebar.jsx
+│   │       └── TranscriptTable.jsx
+│   │
+│   └── package.json
+│
+├── README.md
+└── whisper_test.py             # Early experimentation file
 
-FFmpeg: Required for audio processing.
+````
 
-NVIDIA GPU (Recommended): Ensure CUDA drivers are installed for 10x faster transcription.
+---
 
-Option 1: WSL Ubuntu (Recommended)
-Open WSL:
+## Requirements
 
-Bash
-wsl
-cd /mnt/c/Users/Admin/Desktop/Python/kAI_track
-Activate Environment:
+### Core Stack
 
-Bash
-source ../venv/bin/activate
-Install Dependencies:
+- Python 3.12+
+- Node.js 18+
+- NVIDIA GPU recommended (RTX 3050 works)
 
-Bash
-uv pip install "numpy<2"
-uv pip install torch==2.5.1 torchaudio==2.5.1
-uv pip install git+[https://github.com/m-bain/whisperx.git](https://github.com/m-bain/whisperx.git) --no-deps
-Option 2: Windows CMD / PowerShell
-Navigate to Project:
+---
 
-DOS
-cd C:\Users\Admin\Desktop\Python\kAI_track
-..\venv\Scripts\activate
-Install Dependencies:
+## Backend Setup (WSL Recommended)
 
-DOS
-uv pip install "numpy<2"
-uv pip install torch==2.5.1 torchaudio==2.5.1
-uv pip install git+[https://github.com/m-bain/whisperx.git](https://github.com/m-bain/whisperx.git) --no-deps
-▶️ Running Transcription
-Add Audio: Place your file (e.g., meeting.wav) in backend/storage/audio/.
+### 1. Create and activate environment
 
-Execute Runner:
+```bash
+cd kAI_track
+python3 -m venv venv
+source venv/bin/activate
+````
 
-Bash
-python backend/test_transcribe.py
-Check Output: The console will display the timestamped segments:
+### 2. Install dependencies (uv only)
 
-Plaintext
-[0.00 - 2.50] Hello everyone.
-[2.51 - 6.10] Thanks for joining today's meeting.
+```bash
+uv pip install fastapi uvicorn sqlalchemy
+uv pip install torch whisperx numpy==1.26.4
+```
+
+### 3. Initialize the database
+
+```bash
+python -m backend.init_db
+```
+
+This creates:
+
+* `backend/storage/kai_track.db`
+
+### 4. Run backend server
+
+```bash
+uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Backend will be live at:
+
+* http://<WSL-IP>:8000
+* Swagger docs: http://<WSL-IP>:8000/docs
+
+To find your WSL IP:
+
+```bash
+hostname -I
+```
+
+---
+
+## Backend Setup (Windows Terminal Alternative)
+
+If running without WSL:
+
+```powershell
+cd kAI_track
+python -m venv venv
+venv\Scripts\activate
+pip install fastapi uvicorn sqlalchemy
+pip install torch whisperx numpy==1.26.4
+python -m backend.init_db
+uvicorn backend.main:app --reload
+```
+
+---
+
+## Frontend Setup (React Dashboard)
+
+### 1. Install dependencies
+
+```bash
+cd frontend
+npm install
+```
+
+### 2. Start the frontend dev server
+
+```bash
+npm run dev -- --host 0.0.0.0 --port 5173
+```
+
+Frontend will run at:
+
+* [http://localhost:5173](http://localhost:5173)
+
+Make sure the backend is running before uploading files.
+
+---
+
+## How Transcription Works
+
+1. Upload `.wav` or `.mp3` file from the frontend
+2. Backend runs Whisper transcription
+3. Transcript segments are generated with timestamps
+4. Results are stored in:
+
+   * SQLite (`meetings` table)
+   * JSON transcript archive
+5. Frontend displays transcript + meeting history
+
+---
+
+## Notes
+
+* Accurate mode uses larger Whisper models and may be slower.
+* Fast mode is intended for quick testing and iteration.
+* Speaker diarization will be added in Sprint 2 using a cloud-based MVP approach for reliability.
+
+---
+
+## Next Development Step
+
+
+* Transcript history UI improvements
+* Speaker diarization integration
+* Speaker-to-text mapping inside transcripts
+
+---
+
+```
+
+
+Transcript History UI upgrade (full archive view + playback + speaker-ready structure).
+```
