@@ -1,4 +1,3 @@
-
 ```md
 # kAI Track
 
@@ -36,7 +35,6 @@ This project is being built as a local-first prototype with a FastAPI backend, S
 ## Project Structure
 
 ```
-
 kAI_track/
 │
 ├── backend/
@@ -71,8 +69,7 @@ kAI_track/
 │
 ├── README.md
 └── whisper_test.py             # Early experimentation file
-
-````
+```
 
 ---
 
@@ -94,7 +91,7 @@ kAI_track/
 cd kAI_track
 python3 -m venv venv
 source venv/bin/activate
-````
+```
 
 ### 2. Install dependencies (uv only)
 
@@ -111,7 +108,7 @@ python -m backend.init_db
 
 This creates:
 
-* `backend/storage/kai_track.db`
+- `backend/storage/kai_track.db`
 
 ### 4. Run backend server
 
@@ -121,8 +118,8 @@ uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 
 Backend will be live at:
 
-* http://<WSL-IP>:8000
-* Swagger docs: http://<WSL-IP>:8000/docs
+- http://<WSL-IP>:8000
+- Swagger docs: http://<WSL-IP>:8000/docs
 
 To find your WSL IP:
 
@@ -165,7 +162,7 @@ npm run dev -- --host 0.0.0.0 --port 5173
 
 Frontend will run at:
 
-* [http://localhost:5173](http://localhost:5173)
+- [http://localhost:5173](http://localhost:5173)
 
 Make sure the backend is running before uploading files.
 
@@ -178,31 +175,21 @@ Make sure the backend is running before uploading files.
 3. Transcript segments are generated with timestamps
 4. Results are stored in:
 
-   * SQLite (`meetings` table)
-   * JSON transcript archive
+   - SQLite (`meetings` table)
+   - JSON transcript archive
 5. Frontend displays transcript + meeting history
 
 ---
 
 ## Notes
 
-* Accurate mode uses larger Whisper models and may be slower.
-* Fast mode is intended for quick testing and iteration.
-* Speaker diarization will be added in Sprint 2 using a cloud-based MVP approach for reliability.
+- Accurate mode uses larger Whisper models and may be slower.
+- Fast mode is intended for quick testing and iteration.
+- Speaker diarization will be added in Sprint 2 using a cloud-based MVP approach for reliability.
 
 ---
 
-## Next Development Step
 
-
-* Transcript history UI improvements
-* Speaker diarization integration
-* Speaker-to-text mapping inside transcripts
-
----
-
-```
-
-
-Transcript History UI upgrade (full archive view + playback + speaker-ready structure).
+- Speaker diarization integration
+- Speaker-to-text mapping inside transcripts
 ```
