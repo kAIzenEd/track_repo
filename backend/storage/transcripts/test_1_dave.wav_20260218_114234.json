@@ -1,0 +1,28 @@
+{
+    "meeting_id": 13,
+    "audio_file": "test_1_dave.wav",
+    "created_at": "20260218_114234",
+    "mode": "accurate",
+    "segments": [
+        {
+            "start": 0.51,
+            "end": 15.44,
+            "text": "Thanks for being back. Almost out of time, everyone. Three of three, so three of your own priorities for the quarter, and then three outside of your primary area of responsibility. You may ask, David, but don't I get three to seven? Can't I write more"
+        },
+        {
+            "start": 15.44,
+            "end": 30.37,
+            "text": "down? They're already there on our issues list, so don't feel compelled to write them down. We're just trying to have focus on the most important priorities for rock setting. We can always fill up, if you want to take seven, we can always fill up your"
+        },
+        {
+            "start": 30.95,
+            "end": 36.58,
+            "text": "your quarter priorities. Three and three. Then"
+        },
+        {
+            "start": 36.58,
+            "end": 42.21,
+            "text": "we'll do a little team health quickly."
+        }
+    ]
+}

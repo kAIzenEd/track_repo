@@ -1,0 +1,48 @@
+{
+    "meeting_id": 14,
+    "audio_file": "hall_of_fame.mp3",
+    "created_at": "20260218_114713",
+    "mode": "accurate",
+    "segments": [
+        {
+            "start": 24.03,
+            "end": 36.9,
+            "text": "you can be the king kong banging on your chest you can beat the world you can beat the war you can talk the guy go banging on his door you can throw your hands up you can"
+        },
+        {
+            "start": 36.9,
+            "end": 49.76,
+            "text": "beat the clock you can move a mountain you can break rocks you can be a master don't wait for luck dedicate yourself and you can find yourself standing in the hall of fame yeah and the world"
+        },
+        {
+            "start": 68.39,
+            "end": 82.3,
+            "text": "You can run the mile, you can walk straight through hail with a smile You could be the hero, you could get the gold Breaking all the records they thought never could be broke Yeah, do it for your people, do it"
+        },
+        {
+            "start": 82.3,
+            "end": 96.22,
+            "text": "for your pride You're never gonna know if you never even try Do it for your country, do it for your name Cause there gonna be a day when you're Standing in the Hall of Fame And the world's gonna know your name"
+        },
+        {
+            "start": 127.01,
+            "end": 136.48,
+            "text": "We'll be"
+        },
+        {
+            "start": 136.48,
+            "end": 145.95,
+            "text": "right back."
+        },
+        {
+            "start": 172.29,
+            "end": 181.76,
+            "text": "You can be a child, you can beat the wall You can drop your child, yeah, they're banging on the top You can be a child, yeah, you can beat the clock"
+        },
+        {
+            "start": 181.76,
+            "end": 191.23,
+            "text": "You can be a child, yeah, you can beat the clock You can be a child, yeah, you can break rocks You can be a child, yeah, you can beat the wall"
+        }
+    ]
+}
