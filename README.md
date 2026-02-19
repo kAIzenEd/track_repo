@@ -1,11 +1,41 @@
 # kAI Track
 
-> ```md
-# kAI Track
+> AI-driven meeting assistant MVP for structured transcription and meeting intelligence.
 
-kAI Track is an AI-driven meeting assistant MVP that transcribes meeting audio into structured text with timestamps, stores meeting history, and provides a foundation for upcoming features like speaker diarization, summarization, and action-item extraction.
+---
 
-This project is being built as a local-first prototype with a FastAPI backend, SQLite storage, and a React-based frontend for testing and iteration.
+## Introduction
+
+**kAI Track** is a local-first AI-powered meeting assistant designed to transcribe meeting audio into structured, timestamped text. It stores meeting history and lays the foundation for advanced features such as speaker diarization, summarization, and action-item extraction.
+
+This MVP is built with:
+
+- **Backend:** FastAPI  
+- **Database:** SQLite  
+- **Frontend:** React (Vite)  
+- **Transcription Engine:** Whisper  
+
+---
+
+## Table of Contents
+
+- [Current Features](#current-features-sprint-1-complete)
+- [Upcoming Features](#upcoming-features-sprint-2-and-beyond)
+- [Project Structure](#project-structure)
+- [Installation & Setup](#installation--setup)
+  - [1. Install Git](#1-install-git)
+  - [2. Authenticate with GitHub](#2-authenticate-with-github)
+  - [3. Clone the Repository](#3-clone-the-repository)
+  - [4. Install Python 3.12](#4-install-python-312)
+  - [5. Create Virtual Environment](#5-create-and-activate-a-python-virtual-environment)
+  - [6. Install uv](#6-install-uv)
+  - [7. Install Python Dependencies](#7-install-python-dependencies)
+  - [8. Create Storage Directories](#8-create-storage-directories)
+  - [9. Initialize the Database](#9-initialize-the-database)
+  - [10. Run the Backend](#10-run-the-backend-fastapi)
+  - [11. Run the Frontend](#11-frontend-install-and-run-react--vite)
+  - [12. End-to-End Testing](#12-test-end-to-end)
+  - [13. Verification Commands](#13-useful-verification-commands)
 
 ---
 
@@ -19,8 +49,8 @@ This project is being built as a local-first prototype with a FastAPI backend, S
 - Meeting history API endpoints
 - React MVP dashboard:
   - Drag-and-drop audio upload
-  - Transcript display in a structured table
-  - Meeting archive sidebar with transcript retrieval
+  - Structured transcript display
+  - Meeting archive sidebar with retrieval
 
 ---
 
@@ -28,7 +58,7 @@ This project is being built as a local-first prototype with a FastAPI backend, S
 
 - Speaker diarization ("who said what")
 - Speaker labeling and renaming in the UI
-- Meeting summarization using LLMs
+- LLM-powered meeting summarization
 - Action-item extraction and assignment
 - Task manager integration and workflow completion
 
@@ -75,128 +105,184 @@ kAI_track/
 
 ---
 
-## Requirements
-
-### Core Stack
-
-- Python 3.12+
-- Node.js 18+
-- NVIDIA GPU recommended (RTX 3050 works)
+# Installation & Setup
 
 ---
 
-## Backend Setup (WSL Recommended)
+## 1. Install Git
 
-### 1. Create and activate environment
+### WSL / Ubuntu
 
 ```bash
-cd kAI_track
-python3 -m venv venv
+sudo apt update
+sudo apt install -y git curl unzip
+git --version
+```
+### Windows (PowerShell)
+#### Download and run the installer:
+```
+https://git-scm.com/download/win
+```
+### Verify:
+```
+git --version
+```
+##### 2. Authenticate with GitHub (Recommended: GitHub CLI)
+##### Using gh avoids token copy/paste issues when cloning private repositories.
+
+### WSL / Ubuntu
+```
+sudo apt install -y gh
+gh auth login
+```
+Choose:
+
+GitHub.com
+
+HTTPS
+
+Authenticate with browser
+
+### Windows (PowerShell)
+```
+winget install --id GitHub.cli
+gh auth login
+```
+### 3. Clone the Repository
+Replace with your repository if different.
+
+### WSL / Ubuntu
+```
+cd ~/projects
+git clone https://github.com/kAIzenEd/track_repo.git
+cd track_repo
+```
+### Windows (PowerShell)
+```
+cd C:\Users\<YourUser>\projects
+git clone https://github.com/kAIzenEd/track_repo.git
+cd track_repo
+```
+If the repository is private and prompts for credentials, ensure gh auth login has been completed.
+
+## 4. Install Python 3.12
+### WSL / Ubuntu
+```
+sudo apt install -y python3.12 python3.12-venv python3-pip
+python3.12 --version
+```
+### Windows
+```
+Download installer:
+https://www.python.org/downloads/release/python-3123/
+
+During installation:
+
+Check "Add Python to PATH"
+```
+#### Verify:
+```
+python --version
+```
+## 5. Create and Activate a Python Virtual Environment
+### WSL / Ubuntu
+```
+python3.12 -m venv venv
 source venv/bin/activate
 ```
-
-### 2. Install dependencies (uv only)
-
-```bash
-uv pip install fastapi uvicorn sqlalchemy
-uv pip install torch whisperx numpy==1.26.4
+### Windows (PowerShell)
 ```
-
-### 3. Initialize the database
-
-```bash
-python -m backend.init_db
-```
-
-This creates:
-
-- `backend/storage/kai_track.db`
-
-### 4. Run backend server
-
-```bash
-uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-Backend will be live at:
-
-- http://<WSL-IP>:8000
-- Swagger docs: http://<WSL-IP>:8000/docs
-
-To find your WSL IP:
-
-```bash
-hostname -I
-```
-
----
-
-## Backend Setup (Windows Terminal Alternative)
-
-If running without WSL:
-
-```powershell
-cd kAI_track
 python -m venv venv
 venv\Scripts\activate
-pip install fastapi uvicorn sqlalchemy
-pip install torch whisperx numpy==1.26.4
+```
+## 6. Install uv
+### macOS / Linux / WSL
+```
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv --version
+```
+### Windows (PowerShell)
+```
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+uv --version
+```
+If uv is unavailable, you may use pip install directly.
+
+## 7. Install Python Dependencies
+##### If requirements.txt exists:
+```
+uv pip install -r requirements.txt
+```
+##### Otherwise, install core backend dependencies:
+```
+uv pip install fastapi uvicorn[standard] sqlalchemy python-multipart requests
+uv pip install numpy==1.26.4
+uv pip install torch torchaudio
+uv pip install whisperx faster-whisper
+```
+## Notes
+### numpy < 2 (1.26.4) is required.
+
+For GPU acceleration, install the correct torch wheel for your CUDA version from:
+https://pytorch.org/
+
+## 8. Create Storage Directories
+```
+mkdir -p backend/storage/audio
+mkdir -p backend/storage/transcripts
+```
+## 9. Initialize the Database
+```
 python -m backend.init_db
+```
+This creates:
+```
+backend/storage/kai_track.db
+```
+## 10. Run the Backend (FastAPI)
+### Development (Linux / WSL)
+```
+uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+```
+### Windows
+```
 uvicorn backend.main:app --reload
 ```
+Verify:
 
----
+Open:
+```
+http://localhost:8000/docs
+```
+(Use WSL IP if accessing from Windows browser.)
 
-## Frontend Setup (React Dashboard)
-
-### 1. Install dependencies
-
-```bash
+## 11. Frontend: Install and Run (React / Vite)
+```
 cd frontend
 npm install
-```
-
-### 2. Start the frontend dev server
-
-```bash
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
-
-Frontend will run at:
-
-- [http://localhost:5173](http://localhost:5173)
-
-Make sure the backend is running before uploading files.
-
----
-
-## How Transcription Works
-
-1. Upload `.wav` or `.mp3` file from the frontend
-2. Backend runs Whisper transcription
-3. Transcript segments are generated with timestamps
-4. Results are stored in:
-
-   - SQLite (`meetings` table)
-   - JSON transcript archive
-5. Frontend displays transcript + meeting history
-
----
-
-## Notes
-
-- Accurate mode uses larger Whisper models and may be slower.
-- Fast mode is intended for quick testing and iteration.
-- Speaker diarization will be added in Sprint 2 using a cloud-based MVP approach for reliability.
-
----
-
+Open the URL printed by Vite (usually):
 ```
+http://localhost:5173
+```
+## 12. Test End-to-End
++ Ensure backend is running.
++ Ensure frontend is running.
++ Open the frontend UI.
++ Upload a .wav or .mp3 file.
 
-![License](https://img.shields.io/badge/license-MIT-green) ![Version](https://img.shields.io/badge/version-1.0.0-blue) ![Language](https://img.shields.io/badge/language-Python, Javascript-yellow) ![Framework](https://img.shields.io/badge/framework-React, Vite, FastAPI-orange)
+Confirm:
 
-## ℹ️ Project Information
+* File uploads to /transcribe
+* Transcript JSON is saved in backend/storage/transcripts
+* Meeting appears in /meetings
+* Meeting appears in frontend sidebar
 
-- **👤 Author:** Rahul Jordan Chandra
-- **📦 Version:** 1.0.0
-- **📄 License:** MIT
+## 13. Useful Verification Commands
+- git status
+- python --version
+- uv --version
+- npm -v
+- node -v
+- uvicorn --version
