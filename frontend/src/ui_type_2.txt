@@ -1,0 +1,744 @@
+<div
+  class="export-wrapper"
+  style="
+    width: 1440px;
+    min-height: 812px;
+    position: relative;
+    font-family: var(--font-family-body);
+    background-color: var(--background);
+  "
+>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@100;200;300;400;500;600;700;800;900&family=Geist:wght@100;200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@100;200;300;400;500;600;700&family=IBM+Plex+Sans:wght@100;200;300;400;500;600;700&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Nunito:wght@200;300;400;500;600;700;800;900&family=PT+Serif:wght@400;700&family=Roboto+Slab:wght@100;200;300;400;500;600;700;800;900&family=Roboto:wght@100;300;400;500;700;900&family=Shantell+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <html>
+    <head>
+      <style id="theme-vars">
+        :root {
+          --background: #0f172a;
+          --foreground: #f8fafc;
+          --muted: rgba(255, 255, 255, 0.1);
+          --muted-foreground: #94a3b8;
+          --primary: #38bdf8;
+          --primary-foreground: #000000;
+          --card: rgba(255, 255, 255, 0.03);
+          --card-foreground: #f8fafc;
+          --border: rgba(255, 255, 255, 0.1);
+          --radius-sm: 4px;
+          --radius-md: 12px;
+          --radius-lg: 24px;
+          --radius-xl: 999px;
+        }
+      </style>
+
+      <style id="layout-styles">
+        * {
+          box-sizing: border-box;
+        }
+        .export-wrapper {
+          margin: 0;
+          font-family:
+            -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+            Arial, sans-serif;
+          background-color: #020617;
+          background-image:
+            radial-gradient(
+              at 0% 0%,
+              rgba(56, 189, 248, 0.15) 0px,
+              transparent 50%
+            ),
+            radial-gradient(
+              at 100% 0%,
+              rgba(168, 85, 247, 0.15) 0px,
+              transparent 50%
+            ),
+            radial-gradient(
+              at 100% 100%,
+              rgba(56, 189, 248, 0.15) 0px,
+              transparent 50%
+            );
+          color: var(--foreground);
+          height: 100vh;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .app-container {
+          width: 100%;
+          max-width: 1440px;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          position: relative;
+          padding: 24px;
+          gap: 24px;
+        }
+
+        /* Background Ambient Blobs */
+        .blob {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(80px);
+          z-index: -1;
+          opacity: 0.6;
+        }
+        .blob-1 {
+          width: 400px;
+          height: 400px;
+          background: rgba(168, 85, 247, 0.4);
+          top: -100px;
+          right: 20%;
+        }
+        .blob-2 {
+          width: 300px;
+          height: 300px;
+          background: rgba(56, 189, 248, 0.4);
+          bottom: 10%;
+          left: 10%;
+        }
+
+        /* Glass Effect Utility */
+        .glass-panel {
+          background: rgba(255, 255, 255, 0.01);
+          backdrop-filter: blur(40px) saturate(150%) brightness(1.1);
+          -webkit-backdrop-filter: blur(40px) saturate(150%) brightness(1.1);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+      </style>
+
+      <style id="nav-styles">
+        .navbar {
+          align-self: center;
+          height: 64px;
+          padding: 0 8px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          border-radius: var(--radius-xl);
+          z-index: 10;
+          margin-top: 12px;
+        }
+
+        .nav-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 16px;
+          border-radius: var(--radius-xl);
+          color: var(--muted-foreground);
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+          white-space: nowrap;
+        }
+
+        .nav-item.active {
+          background: rgba(255, 255, 255, 0.1);
+          color: var(--foreground);
+          box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-logo {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 0 16px;
+          color: var(--foreground);
+          font-weight: 600;
+          margin-right: 8px;
+        }
+
+        .user-profile {
+          margin-left: 8px;
+          padding: 4px;
+          border-radius: 50%;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+      </style>
+
+      <style id="main-styles">
+        .grid-layout {
+          display: grid;
+          grid-template-columns: 280px 1fr 320px;
+          gap: 24px;
+          flex: 1;
+          min-height: 0; /* allows scrolling */
+        }
+
+        .sidebar-panel {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          border-radius: var(--radius-lg);
+          padding: 20px;
+          height: 100%;
+        }
+
+        .main-feed {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          height: 100%;
+          overflow-y: auto;
+          padding-right: 8px;
+          border-radius: var(--radius-lg);
+        }
+
+        .main-feed::-webkit-scrollbar {
+          width: 6px;
+        }
+        .main-feed::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 99px;
+        }
+
+        .upload-zone {
+          border-radius: var(--radius-lg);
+          border: 1px dashed rgba(255, 255, 255, 0.2);
+          padding: 32px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          gap: 12px;
+          color: var(--muted-foreground);
+          transition: border-color 0.3s;
+          background: rgba(255, 255, 255, 0.005);
+          margin-bottom: 8px;
+        }
+
+        .summary-panel {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          border-radius: var(--radius-lg);
+          padding: 24px;
+          height: 100%;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .section-title {
+          font-size: 13px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--muted-foreground);
+          font-weight: 600;
+          margin-bottom: 8px;
+        }
+
+        .file-list-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px;
+          border-radius: var(--radius-md);
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          color: var(--foreground);
+          font-size: 14px;
+        }
+
+        .file-icon {
+          width: 36px;
+          height: 36px;
+          border-radius: 8px;
+          background: rgba(56, 189, 248, 0.1);
+          color: #38bdf8;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .transcript-card {
+          border-radius: var(--radius-md);
+          padding: 20px;
+          display: flex;
+          gap: 16px;
+          transition: transform 0.3s;
+        }
+
+        .transcript-card.active-speaker {
+          background: rgba(255, 255, 255, 0.04);
+          border-color: rgba(56, 189, 248, 0.3);
+          box-shadow: 0 0 20px rgba(56, 189, 248, 0.05);
+        }
+
+        .avatar {
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          flex-shrink: 0;
+          object-fit: cover;
+        }
+
+        .speaker-meta {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 6px;
+        }
+
+        .speaker-name {
+          font-weight: 600;
+          font-size: 14px;
+          color: var(--foreground);
+        }
+
+        .timestamp {
+          font-size: 12px;
+          color: var(--muted-foreground);
+        }
+
+        .transcript-text {
+          font-size: 15px;
+          line-height: 1.6;
+          color: rgba(255, 255, 255, 0.9);
+        }
+
+        .summary-blob {
+          position: absolute;
+          width: 150px;
+          height: 150px;
+          background: radial-gradient(
+            circle,
+            rgba(168, 85, 247, 0.2) 0%,
+            transparent 70%
+          );
+          border-radius: 50%;
+          top: -40px;
+          right: -40px;
+          pointer-events: none;
+        }
+
+        .summary-text {
+          font-size: 14px;
+          line-height: 1.6;
+          color: var(--muted-foreground);
+        }
+
+        .summary-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 10px;
+          border-radius: 99px;
+          background: rgba(56, 189, 248, 0.1);
+          color: #38bdf8;
+          font-size: 12px;
+          font-weight: 500;
+          margin-bottom: 12px;
+          width: fit-content;
+        }
+
+        .action-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          width: 100%;
+          padding: 12px;
+          border-radius: var(--radius-md);
+          background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.1),
+            rgba(255, 255, 255, 0.05)
+          );
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: white;
+          font-weight: 500;
+          font-size: 14px;
+          cursor: pointer;
+          margin-top: auto;
+        }
+
+        .processing-indicator {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px;
+          border-radius: var(--radius-md);
+          background: rgba(56, 189, 248, 0.05);
+          border: 1px solid rgba(56, 189, 248, 0.2);
+          margin-top: 16px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="app-container">
+        <!-- Ambient Blobs -->
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+
+        <!-- Adaptive Tab Bar -->
+        <nav class="navbar glass-panel" data-media-type="banani-button">
+          <div class="nav-logo">
+            <div
+              style="
+                width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <iconify-icon
+                icon="lucide:droplets"
+                style="font-size: 20px; color: #38bdf8"
+              ></iconify-icon>
+            </div>
+            <span>LiquidTranscribe</span>
+          </div>
+          <div class="nav-item active" data-media-type="banani-button">
+            Dashboard
+          </div>
+          <div class="nav-item" data-media-type="banani-button">My Files</div>
+          <div class="nav-item" data-media-type="banani-button">Team</div>
+          <div class="nav-item" data-media-type="banani-button">Settings</div>
+          <img
+            src="https://storage.googleapis.com/banani-avatars/avatar%2Ffemale%2F25-35%2FEuropean%2F3"
+            alt="User"
+            class="user-profile avatar"
+            data-media-type="banani-button"
+          />
+        </nav>
+
+        <div class="grid-layout">
+          <!-- Left Sidebar: Recent Files -->
+          <aside class="sidebar-panel glass-panel">
+            <div class="section-title">Recent Recordings</div>
+
+            <div class="file-list-item" data-media-type="banani-button">
+              <div class="file-icon">
+                <iconify-icon
+                  icon="lucide:mic"
+                  style="font-size: 18px"
+                ></iconify-icon>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 2px">
+                <span style="font-weight: 500">Product Sync</span>
+                <span style="font-size: 12px; color: var(--muted-foreground)"
+                  >Today, 10:30 AM</span
+                >
+              </div>
+            </div>
+
+            <div class="file-list-item" data-media-type="banani-button">
+              <div
+                class="file-icon"
+                style="background: rgba(168, 85, 247, 0.1); color: #a855f7"
+              >
+                <iconify-icon
+                  icon="lucide:video"
+                  style="font-size: 18px"
+                ></iconify-icon>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 2px">
+                <span style="font-weight: 500">User Interview #4</span>
+                <span style="font-size: 12px; color: var(--muted-foreground)"
+                  >Yesterday</span
+                >
+              </div>
+            </div>
+
+            <div class="file-list-item" data-media-type="banani-button">
+              <div
+                class="file-icon"
+                style="background: rgba(255, 255, 255, 0.05); color: white"
+              >
+                <iconify-icon
+                  icon="lucide:file-audio"
+                  style="font-size: 18px"
+                ></iconify-icon>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 2px">
+                <span style="font-weight: 500">Q3 Planning</span>
+                <span style="font-size: 12px; color: var(--muted-foreground)"
+                  >Oct 24</span
+                >
+              </div>
+            </div>
+
+            <div style="margin-top: auto">
+              <div class="processing-indicator">
+                <div style="display: flex; gap: 8px; align-items: center">
+                  <iconify-icon
+                    icon="lucide:loader-2"
+                    style="font-size: 16px; color: #38bdf8"
+                  ></iconify-icon>
+                  <span
+                    style="font-size: 13px; color: #38bdf8; font-weight: 500"
+                    >Processing...</span
+                  >
+                </div>
+                <span style="font-size: 12px; color: var(--muted-foreground)"
+                  >2m left</span
+                >
+              </div>
+            </div>
+          </aside>
+
+          <!-- Center: Transcript Feed -->
+          <section class="main-feed">
+            <!-- Liquid Dropzone -->
+            <div
+              class="upload-zone glass-panel"
+              data-media-type="banani-button"
+            >
+              <div
+                style="
+                  width: 48px;
+                  height: 48px;
+                  border-radius: 50%;
+                  background: rgba(56, 189, 248, 0.1);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  color: #38bdf8;
+                "
+              >
+                <iconify-icon
+                  icon="lucide:cloud-upload"
+                  style="font-size: 24px"
+                ></iconify-icon>
+              </div>
+              <span style="font-weight: 500; color: var(--foreground)"
+                >Drop audio or video files here</span
+              >
+              <span style="font-size: 13px">Supports MP3, WAV, MP4, MOV</span>
+            </div>
+
+            <!-- Cards -->
+            <div class="transcript-card glass-panel">
+              <img
+                src="https://storage.googleapis.com/banani-avatars/avatar%2Fmale%2F35-50%2FNorth%20American%2F1"
+                class="avatar"
+                alt="Speaker"
+              />
+              <div style="flex: 1">
+                <div class="speaker-meta">
+                  <span class="speaker-name">David Miller</span>
+                  <span class="timestamp">00:04</span>
+                </div>
+                <p class="transcript-text">
+                  Alright, let's get started. The main goal for this sprint is
+                  to finalize the new dashboard animations. We really want to
+                  push that "liquid" feel.
+                </p>
+              </div>
+            </div>
+
+            <div class="transcript-card glass-panel active-speaker">
+              <img
+                src="https://storage.googleapis.com/banani-avatars/avatar%2Ffemale%2F25-35%2FSouth%20Asian%2F4"
+                class="avatar"
+                alt="Speaker"
+              />
+              <div style="flex: 1">
+                <div class="speaker-meta">
+                  <span class="speaker-name">Sarah Chen</span>
+                  <span class="timestamp">00:15</span>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 4px;
+                      padding: 2px 6px;
+                      background: rgba(56, 189, 248, 0.2);
+                      border-radius: 4px;
+                    "
+                  >
+                    <iconify-icon
+                      icon="lucide:activity"
+                      style="font-size: 10px; color: #38bdf8"
+                    ></iconify-icon>
+                    <span
+                      style="font-size: 10px; color: #38bdf8; font-weight: 600"
+                      >SPEAKING</span
+                    >
+                  </div>
+                </div>
+                <p class="transcript-text" style="color: white">
+                  I've been experimenting with the backdrop filters. Using a
+                  high saturation value combined with a thin specular border
+                  really sells the refractive effect. It looks almost physical.
+                </p>
+              </div>
+            </div>
+
+            <div class="transcript-card glass-panel">
+              <img
+                src="https://storage.googleapis.com/banani-avatars/avatar%2Fmale%2F35-50%2FNorth%20American%2F1"
+                class="avatar"
+                alt="Speaker"
+              />
+              <div style="flex: 1">
+                <div class="speaker-meta">
+                  <span class="speaker-name">David Miller</span>
+                  <span class="timestamp">00:28</span>
+                </div>
+                <p class="transcript-text">
+                  That sounds perfect. Make sure the performance holds up on
+                  lower-end devices though. Blur can be expensive.
+                </p>
+              </div>
+            </div>
+
+            <div class="transcript-card glass-panel">
+              <img
+                src="https://storage.googleapis.com/banani-avatars/avatar%2Ffemale%2F18-25%2FAfrican%2F2"
+                class="avatar"
+                alt="Speaker"
+              />
+              <div style="flex: 1">
+                <div class="speaker-meta">
+                  <span class="speaker-name">Maya Johnson</span>
+                  <span class="timestamp">00:32</span>
+                </div>
+                <p class="transcript-text">
+                  I'll run some profiles today. We might need to reduce the
+                  radius slightly for mobile, but on desktop, it should be
+                  buttery smooth.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Right: AI Summary -->
+          <aside class="summary-panel glass-panel">
+            <div class="summary-blob"></div>
+
+            <div class="section-title">AI Intelligence</div>
+
+            <div class="summary-pill">
+              <iconify-icon
+                icon="lucide:sparkles"
+                style="font-size: 12px"
+              ></iconify-icon>
+              <span>Key Insights</span>
+            </div>
+
+            <p class="summary-text" style="margin-bottom: 24px">
+              The team is focused on implementing "Liquid Glass" physics for the
+              new dashboard.
+              <br /><br />
+              <span style="color: var(--foreground); font-weight: 500"
+                >Sarah</span
+              >
+              confirmed the visual approach using specular borders and
+              saturation. <br /><br />
+              <span style="color: var(--foreground); font-weight: 500"
+                >David</span
+              >
+              emphasized performance constraints. <br /><br />
+              <span style="color: var(--foreground); font-weight: 500"
+                >Maya</span
+              >
+              will conduct profiling tests today.
+            </p>
+
+            <div class="section-title">Action Items</div>
+            <div
+              style="
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                margin-bottom: 24px;
+              "
+            >
+              <div style="display: flex; gap: 10px; align-items: start">
+                <div
+                  style="
+                    margin-top: 4px;
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 4px;
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                  "
+                ></div>
+                <span style="font-size: 14px; color: var(--muted-foreground)"
+                  >Profile blur performance on mobile devices</span
+                >
+              </div>
+              <div style="display: flex; gap: 10px; align-items: start">
+                <div
+                  style="
+                    margin-top: 4px;
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 4px;
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                  "
+                ></div>
+                <span style="font-size: 14px; color: var(--muted-foreground)"
+                  >Finalize saturation values</span
+                >
+              </div>
+            </div>
+
+            <button class="action-btn" data-media-type="banani-button">
+              <iconify-icon
+                icon="lucide:share-2"
+                style="font-size: 16px"
+              ></iconify-icon>
+              Export Transcript
+            </button>
+            <button
+              class="action-btn"
+              style="margin-top: 8px; background: rgba(255, 255, 255, 0.05)"
+              data-media-type="banani-button"
+            >
+              <iconify-icon
+                icon="lucide:copy"
+                style="font-size: 16px"
+              ></iconify-icon>
+              Copy Summary
+            </button>
+          </aside>
+        </div>
+      </div>
+    </body>
+  </html>
+  <script src="https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js"></script>
+  <style>
+    :root {
+      --background: #f6f8fa;
+      --foreground: #0f1724;
+      --border: #00000014;
+      --input: #ffffff;
+      --primary: #4cc6ff;
+      --primary-foreground: #033047;
+      --secondary: #e6f7ff;
+      --secondary-foreground: #083444;
+      --muted: #f2f5f7;
+      --muted-foreground: #6b7280;
+      --success: #d1fadf;
+      --success-foreground: #054e30;
+      --accent: #ffd6e0;
+      --accent-foreground: #3a1020;
+      --destructive: #ffe6e6;
+      --destructive-foreground: #5b0b0b;
+      --warning: #fff4d6;
+      --warning-foreground: #5a4300;
+      --card: #ffffff;
+      --card-foreground: #0f1724;
+      --sidebar: #ffffff;
+      --sidebar-foreground: #0f1724;
+      --sidebar-primary: #e8f8ff;
+      --sidebar-primary-foreground: #023444;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-xl: 12px;
+      --font-family-body: Inter;
+    }
+  </style>
+</div>

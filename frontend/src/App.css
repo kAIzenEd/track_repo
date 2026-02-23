@@ -1,0 +1,106 @@
+/* App layout + Liquid glass panels */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 35px;
+}
+
+.app-grid {
+  width: 100%;
+  max-width: 1200px;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 25px;
+}
+
+/* Sidebar glass */
+.sidebar {
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 22px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow: 0 12px 34px rgba(0,0,0,0.06);
+  height: 85vh;
+  overflow-y: auto;
+}
+
+/* Meeting list header handled inside component */
+
+/* Meeting button base */
+.meeting-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 14px;
+  border: none;
+  margin-bottom: 10px;
+  font-size: 13px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.65);
+  text-align: left;
+  transition: transform .15s ease, background .15s ease;
+}
+.meeting-btn:hover { transform: translateY(-3px); }
+.meeting-btn.active {
+  background: rgba(99,102,241,0.14);
+  font-weight: 700;
+}
+
+/* Main panel glass */
+.main-panel {
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 24px;
+  padding: 36px;
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  height: 85vh;
+  overflow-y: auto;
+}
+
+/* Mode select style (keeps consistent look) */
+.mode-select {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.8);
+}
+
+/* Upload box */
+.upload-box {
+  border: 2px dashed rgba(99,102,241,0.35);
+  border-radius: 18px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  margin-top: 12px;
+  background: rgba(255,255,255,0.5);
+  transition: transform .12s ease, border-color .12s ease;
+}
+.upload-box:hover {
+  transform: translateY(-3px);
+  border-color: rgba(99,102,241,0.7);
+}
+
+/* status text */
+.status-text {
+  margin-top: 12px;
+  font-weight: 600;
+}
+
+/* transcript */
+.transcript-table {
+  width: 100%;
+  margin-top: 20px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.transcript-table table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.transcript-table thead tr { background: rgba(238,242,255,0.85); }
+.transcript-table th, .transcript-table td { padding: 12px; text-align: left; }
+.transcript-table tr:nth-child(even) td { background: rgba(250,250,251,0.6); }

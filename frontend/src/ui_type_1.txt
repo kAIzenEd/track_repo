@@ -1,0 +1,950 @@
+<div
+  class="export-wrapper"
+  style="
+    width: 1440px;
+    min-height: 812px;
+    position: relative;
+    font-family: var(--font-family-body);
+    background-color: var(--background);
+  "
+>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@100;200;300;400;500;600;700;800;900&family=Geist:wght@100;200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@100;200;300;400;500;600;700&family=IBM+Plex+Sans:wght@100;200;300;400;500;600;700&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Nunito:wght@200;300;400;500;600;700;800;900&family=PT+Serif:wght@400;700&family=Roboto+Slab:wght@100;200;300;400;500;600;700;800;900&family=Roboto:wght@100;300;400;500;700;900&family=Shantell+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <html>
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Liquid Glass Dashboard</title>
+      <style>
+        :root {
+          --background: #0a0a0b;
+          --foreground: #ffffff;
+          --glass-border: rgba(255, 255, 255, 0.15);
+          --glass-surface: rgba(255, 255, 255, 0.02);
+          --glass-highlight: rgba(255, 255, 255, 0.08);
+          --primary: #3b82f6;
+          --primary-foreground: #ffffff;
+          --accent: #8b5cf6;
+          --muted: rgba(255, 255, 255, 0.4);
+          --font-family-body: system-ui, -apple-system, sans-serif;
+        }
+
+        * {
+          box-sizing: border-box;
+        }
+
+        .export-wrapper {
+          margin: 0;
+          padding: 0;
+          background-color: var(--background);
+          color: var(--foreground);
+          font-family: var(--font-family-body);
+          min-height: 100vh;
+          overflow-x: hidden;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          background: radial-gradient(
+            circle at top left,
+            #1e1b4b,
+            #000000,
+            #0f172a
+          );
+        }
+
+        /* Ambient Background Blobs */
+        .blob {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(80px);
+          opacity: 0.4;
+          z-index: 0;
+        }
+        .blob-1 {
+          width: 600px;
+          height: 600px;
+          background: #4c1d95;
+          top: -200px;
+          left: -100px;
+        }
+        .blob-2 {
+          width: 500px;
+          height: 500px;
+          background: #0ea5e9;
+          bottom: 0;
+          right: -100px;
+        }
+        .blob-3 {
+          width: 300px;
+          height: 300px;
+          background: #ec4899;
+          top: 40%;
+          left: 40%;
+          opacity: 0.2;
+        }
+
+        .layout-container {
+          position: relative;
+          z-index: 1;
+          width: 100%;
+          max-width: 1440px;
+          padding: 24px;
+          display: grid;
+          grid-template-columns: 320px 1fr 360px;
+          gap: 24px;
+          height: 100vh;
+          max-height: 1080px;
+        }
+
+        /* Glass Components */
+        .glass-panel {
+          background: var(--glass-surface);
+          backdrop-filter: blur(40px) saturate(150%) brightness(1.1);
+          -webkit-backdrop-filter: blur(40px) saturate(150%) brightness(1.1);
+          border: 1px solid var(--glass-border);
+          border-radius: 24px;
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          transition: transform 0.2s ease;
+        }
+
+        .glass-header {
+          padding: 20px;
+          border-bottom: 1px solid var(--glass-border);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .glass-title {
+          font-size: 16px;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        /* Floating Nav Pill */
+        .nav-pill-container {
+          position: absolute;
+          top: 24px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 50;
+        }
+
+        .nav-pill {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          background: rgba(20, 20, 25, 0.6);
+          backdrop-filter: blur(20px);
+          border: 1px solid var(--glass-border);
+          border-radius: 99px;
+          box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-item {
+          padding: 8px 16px;
+          border-radius: 99px;
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--muted);
+          cursor: default;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .nav-item.active {
+          background: var(--glass-highlight);
+          color: white;
+          box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Dropzone */
+        .dropzone-container {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          padding: 20px;
+        }
+
+        .liquid-dropzone {
+          flex: 1;
+          border-radius: 20px;
+          background: radial-gradient(
+            circle at center,
+            rgba(59, 130, 246, 0.1),
+            transparent 70%
+          );
+          border: 2px dashed rgba(255, 255, 255, 0.2);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          gap: 16px;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .liquid-dropzone::before {
+          content: "";
+          position: absolute;
+          width: 200%;
+          height: 200%;
+          background: radial-gradient(
+            circle,
+            rgba(255, 255, 255, 0.03) 0%,
+            transparent 50%
+          );
+          animation: pulse 4s ease-in-out infinite;
+        }
+
+        .upload-icon-wrapper {
+          width: 64px;
+          height: 64px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.05);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Transcript Feed */
+        .transcript-feed {
+          padding: 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+          overflow-y: auto;
+          height: 100%;
+        }
+
+        .transcript-feed::-webkit-scrollbar {
+          width: 4px;
+        }
+        .transcript-feed::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+        }
+
+        .speaker-card {
+          padding: 20px;
+          border-radius: 16px;
+          background: rgba(255, 255, 255, 0.01);
+          border: 1px solid transparent;
+          display: flex;
+          gap: 16px;
+          transition: all 0.3s ease;
+        }
+
+        .speaker-card.active {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          box-shadow: 0 0 40px -10px rgba(0, 0, 0, 0.5);
+          transform: scale(1.02);
+          backdrop-filter: blur(50px);
+        }
+
+        .speaker-avatar {
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          overflow: hidden;
+          flex-shrink: 0;
+        }
+
+        .speaker-avatar img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .speaker-content {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .speaker-name {
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--muted);
+          display: flex;
+          justify-content: space-between;
+        }
+
+        .timestamp {
+          font-weight: 400;
+          opacity: 0.6;
+        }
+
+        .transcript-text {
+          font-size: 15px;
+          line-height: 1.6;
+          color: #e2e8f0;
+        }
+
+        .transcript-text span {
+          display: inline-block;
+        }
+
+        /* Right Panel: Summary & Actions */
+        .summary-panel {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+          padding: 24px;
+          position: relative;
+        }
+
+        .summary-card {
+          background: rgba(0, 0, 0, 0.2);
+          border-radius: 16px;
+          padding: 20px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .summary-header {
+          font-size: 12px;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          color: var(--muted);
+          margin-bottom: 12px;
+          font-weight: 600;
+        }
+
+        .summary-points {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .point {
+          display: flex;
+          gap: 12px;
+          font-size: 14px;
+          line-height: 1.5;
+          color: #cbd5e1;
+        }
+
+        .point-bullet {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: var(--accent);
+          margin-top: 8px;
+          flex-shrink: 0;
+          box-shadow: 0 0 10px var(--accent);
+        }
+
+        .action-blobs {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+          margin-top: auto;
+        }
+
+        .action-blob {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 10px 16px;
+          border-radius: 99px;
+          font-size: 13px;
+          color: white;
+          cursor: default;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        /* Files List in Sidebar */
+        .file-list {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          margin-top: 20px;
+        }
+
+        .file-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px;
+          border-radius: 12px;
+          background: transparent;
+          border: 1px solid transparent;
+          transition: background 0.2s;
+        }
+
+        .file-item:hover,
+        .file-item.active {
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .file-icon {
+          width: 32px;
+          height: 32px;
+          background: rgba(59, 130, 246, 0.2);
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #60a5fa;
+        }
+
+        .file-info {
+          flex: 1;
+          overflow: hidden;
+        }
+
+        .file-name {
+          font-size: 14px;
+          font-weight: 500;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .file-meta {
+          font-size: 12px;
+          color: var(--muted);
+          margin-top: 2px;
+        }
+
+        .status-badge {
+          font-size: 10px;
+          padding: 2px 8px;
+          border-radius: 99px;
+          background: rgba(16, 185, 129, 0.2);
+          color: #34d399;
+          border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+      </style>
+    </head>
+    <body>
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+
+      <div class="nav-pill-container">
+        <div class="nav-pill">
+          <div class="nav-item active" data-media-type="banani-button">
+            <div
+              style="
+                width: 16px;
+                height: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <iconify-icon
+                icon="lucide:mic"
+                style="font-size: 16px; color: currentColor"
+              ></iconify-icon>
+            </div>
+            <span>Live</span>
+          </div>
+          <div class="nav-item" data-media-type="banani-button">
+            <div
+              style="
+                width: 16px;
+                height: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <iconify-icon
+                icon="lucide:files"
+                style="font-size: 16px; color: currentColor"
+              ></iconify-icon>
+            </div>
+            <span>Library</span>
+          </div>
+          <div class="nav-item" data-media-type="banani-button">
+            <div
+              style="
+                width: 16px;
+                height: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <iconify-icon
+                icon="lucide:settings"
+                style="font-size: 16px; color: currentColor"
+              ></iconify-icon>
+            </div>
+            <span>Settings</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="layout-container">
+        <!-- Left Sidebar: Files & Upload -->
+        <div class="glass-panel">
+          <div class="glass-header">
+            <div class="glass-title">
+              <div
+                style="
+                  width: 20px;
+                  height: 20px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <iconify-icon
+                  icon="lucide:folder-open"
+                  style="font-size: 20px; color: #cbd5e1"
+                ></iconify-icon>
+              </div>
+              Recent Files
+            </div>
+            <div
+              data-media-type="banani-button"
+              style="
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                opacity: 0.7;
+              "
+            >
+              <iconify-icon
+                icon="lucide:plus"
+                style="font-size: 20px; color: white"
+              ></iconify-icon>
+            </div>
+          </div>
+
+          <div style="padding: 16px; flex: 1; overflow-y: auto">
+            <div class="file-list">
+              <div class="file-item active" data-media-type="banani-button">
+                <div class="file-icon">
+                  <iconify-icon
+                    icon="lucide:waves"
+                    style="font-size: 18px"
+                  ></iconify-icon>
+                </div>
+                <div class="file-info">
+                  <div class="file-name">Q3 Product Review.mp3</div>
+                  <div class="file-meta">Just now • 45m 12s</div>
+                </div>
+                <div class="status-badge">Live</div>
+              </div>
+
+              <div class="file-item" data-media-type="banani-button">
+                <div
+                  class="file-icon"
+                  style="background: rgba(255, 255, 255, 0.05); color: #94a3b8"
+                >
+                  <iconify-icon
+                    icon="lucide:file-audio"
+                    style="font-size: 18px"
+                  ></iconify-icon>
+                </div>
+                <div class="file-info">
+                  <div class="file-name">Client Interview #402</div>
+                  <div class="file-meta">Yesterday • 1h 20m</div>
+                </div>
+              </div>
+
+              <div class="file-item" data-media-type="banani-button">
+                <div
+                  class="file-icon"
+                  style="background: rgba(255, 255, 255, 0.05); color: #94a3b8"
+                >
+                  <iconify-icon
+                    icon="lucide:file-audio"
+                    style="font-size: 18px"
+                  ></iconify-icon>
+                </div>
+                <div class="file-info">
+                  <div class="file-name">Design Sync Weekly</div>
+                  <div class="file-meta">Oct 24 • 32m 05s</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding: 20px; margin-top: auto">
+            <div class="liquid-dropzone" data-media-type="banani-button">
+              <div class="upload-icon-wrapper">
+                <iconify-icon
+                  icon="lucide:upload-cloud"
+                  style="font-size: 24px; color: white"
+                ></iconify-icon>
+              </div>
+              <div style="position: relative; z-index: 2">
+                <div style="font-weight: 500; font-size: 14px">
+                  Drop audio files
+                </div>
+                <div
+                  style="font-size: 12px; color: var(--muted); margin-top: 4px"
+                >
+                  WAV, MP3, M4A
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center: Transcript Feed -->
+        <div class="glass-panel" style="position: relative">
+          <div
+            class="glass-header"
+            style="
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              background: rgba(255, 255, 255, 0.01);
+              backdrop-filter: blur(10px);
+              z-index: 10;
+            "
+          >
+            <div class="glass-title">
+              Q3 Product Review
+              <span
+                style="
+                  font-size: 12px;
+                  font-weight: 400;
+                  opacity: 0.5;
+                  margin-left: 8px;
+                "
+                >Processing...</span
+              >
+            </div>
+            <div style="display: flex; gap: 12px">
+              <div
+                data-media-type="banani-button"
+                style="
+                  width: 32px;
+                  height: 32px;
+                  border-radius: 8px;
+                  background: rgba(255, 255, 255, 0.05);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <iconify-icon
+                  icon="lucide:search"
+                  style="font-size: 16px; color: white"
+                ></iconify-icon>
+              </div>
+              <div
+                data-media-type="banani-button"
+                style="
+                  width: 32px;
+                  height: 32px;
+                  border-radius: 8px;
+                  background: rgba(255, 255, 255, 0.05);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <iconify-icon
+                  icon="lucide:more-horizontal"
+                  style="font-size: 16px; color: white"
+                ></iconify-icon>
+              </div>
+            </div>
+          </div>
+
+          <div class="transcript-feed" style="padding-top: 80px">
+            <!-- Speaker 1 -->
+            <div class="speaker-card">
+              <div class="speaker-avatar">
+                <img
+                  src="https://storage.googleapis.com/banani-avatars/avatar%2Fmale%2F35-50%2FEuropean%2F2"
+                  alt="Speaker"
+                />
+              </div>
+              <div class="speaker-content">
+                <div class="speaker-name">
+                  Alex Chen
+                  <span class="timestamp">00:14</span>
+                </div>
+                <div class="transcript-text">
+                  Let's dive right into the Q3 metrics. Overall, we're seeing a
+                  strong upward trend in user retention, specifically in the
+                  enterprise segment.
+                </div>
+              </div>
+            </div>
+
+            <!-- Speaker 2 -->
+            <div class="speaker-card">
+              <div class="speaker-avatar">
+                <img
+                  src="https://storage.googleapis.com/banani-avatars/avatar%2Ffemale%2F25-35%2FSouth%20Asian%2F4"
+                  alt="Speaker"
+                />
+              </div>
+              <div class="speaker-content">
+                <div class="speaker-name">
+                  Sarah Gupta
+                  <span class="timestamp">00:28</span>
+                </div>
+                <div class="transcript-text">
+                  That matches the feedback we're getting from support tickets.
+                  People are finding the new dashboard much more intuitive.
+                </div>
+              </div>
+            </div>
+
+            <!-- Active Speaker -->
+            <div class="speaker-card active">
+              <div class="speaker-avatar">
+                <img
+                  src="https://storage.googleapis.com/banani-avatars/avatar%2Fmale%2F35-50%2FEuropean%2F2"
+                  alt="Speaker"
+                />
+              </div>
+              <div class="speaker-content">
+                <div class="speaker-name" style="color: #60a5fa">
+                  Alex Chen
+                  <span class="timestamp" style="color: #93c5fd">00:42</span>
+                </div>
+                <div class="transcript-text">
+                  Exactly. And if we look at the churn rate, it's dropped by
+                  nearly 15% since the last release. I think the liquid
+                  interface update really resonated with the power users.
+                </div>
+              </div>
+            </div>
+
+            <!-- Placeholder for next segment -->
+            <div style="height: 100px"></div>
+          </div>
+
+          <!-- Floating Audio Controls Bottom -->
+          <div
+            style="
+              position: absolute;
+              bottom: 24px;
+              left: 50%;
+              transform: translateX(-50%);
+              background: rgba(0, 0, 0, 0.4);
+              backdrop-filter: blur(20px);
+              padding: 12px 24px;
+              border-radius: 99px;
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              display: flex;
+              align-items: center;
+              gap: 24px;
+              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+              z-index: 20;
+            "
+          >
+            <div data-media-type="banani-button">
+              <iconify-icon
+                icon="lucide:rewind"
+                style="font-size: 20px; color: white"
+              ></iconify-icon>
+            </div>
+            <div
+              data-media-type="banani-button"
+              style="
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                background: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: black;
+              "
+            >
+              <iconify-icon
+                icon="lucide:pause"
+                style="font-size: 24px"
+              ></iconify-icon>
+            </div>
+            <div data-media-type="banani-button">
+              <iconify-icon
+                icon="lucide:fast-forward"
+                style="font-size: 20px; color: white"
+              ></iconify-icon>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Sidebar: AI Intelligence -->
+        <div class="glass-panel summary-panel">
+          <div class="glass-header">
+            <div class="glass-title">
+              <div
+                style="
+                  width: 20px;
+                  height: 20px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <iconify-icon
+                  icon="lucide:sparkles"
+                  style="font-size: 18px; color: #a78bfa"
+                ></iconify-icon>
+              </div>
+              AI Insights
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-header">Key Takeaways</div>
+            <div class="summary-points">
+              <div class="point">
+                <div class="point-bullet"></div>
+                <span>Retention up in enterprise segment.</span>
+              </div>
+              <div class="point">
+                <div
+                  class="point-bullet"
+                  style="background: #38bdf8; box-shadow: 0 0 10px #38bdf8"
+                ></div>
+                <span>Churn rate decreased by 15% post-update.</span>
+              </div>
+              <div class="point">
+                <div
+                  class="point-bullet"
+                  style="background: #f472b6; box-shadow: 0 0 10px #f472b6"
+                ></div>
+                <span>Support tickets indicate improved UX sentiment.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-header">Sentiment Analysis</div>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 8px;
+              "
+            >
+              <div style="font-size: 32px; font-weight: 700; color: white">
+                Positive
+              </div>
+              <div
+                style="
+                  padding: 4px 8px;
+                  background: rgba(52, 211, 153, 0.2);
+                  color: #34d399;
+                  border-radius: 6px;
+                  font-size: 12px;
+                  font-weight: 600;
+                "
+              >
+                94%
+              </div>
+            </div>
+            <div
+              style="
+                width: 100%;
+                height: 6px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 99px;
+                overflow: hidden;
+              "
+            >
+              <div
+                style="
+                  width: 94%;
+                  height: 100%;
+                  background: linear-gradient(90deg, #34d399, #3b82f6);
+                "
+              ></div>
+            </div>
+          </div>
+
+          <div class="action-blobs">
+            <div class="action-blob" data-media-type="banani-button">
+              <iconify-icon
+                icon="lucide:share"
+                style="font-size: 14px"
+              ></iconify-icon>
+              Share Recap
+            </div>
+            <div class="action-blob" data-media-type="banani-button">
+              <iconify-icon
+                icon="lucide:copy"
+                style="font-size: 14px"
+              ></iconify-icon>
+              Copy Text
+            </div>
+            <div class="action-blob" data-media-type="banani-button">
+              <iconify-icon
+                icon="lucide:download"
+                style="font-size: 14px"
+              ></iconify-icon>
+              Export PDF
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+  </html>
+  <script src="https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js"></script>
+  <style>
+    :root {
+      --background: #f7f9fb;
+      --foreground: #0f1724;
+      --border: #00000014;
+      --input: #ffffff;
+      --primary: #4cc9f0;
+      --primary-foreground: #05202a;
+      --secondary: #e6f7fb;
+      --secondary-foreground: #073241;
+      --muted: #f1f5f9;
+      --muted-foreground: #8a94a6;
+      --success: #2dd4bf;
+      --success-foreground: #043230;
+      --accent: #a78bfa;
+      --accent-foreground: #26134b;
+      --destructive: #fb7185;
+      --destructive-foreground: #3b0710;
+      --warning: #f59e0b;
+      --warning-foreground: #402600;
+      --card: #ffffff;
+      --card-foreground: #0f1724;
+      --sidebar: #ffffff;
+      --sidebar-foreground: #0b1220;
+      --sidebar-primary: #f0fcff;
+      --sidebar-primary-foreground: #00343a;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-xl: 12px;
+      --font-family-body: Inter;
+    }
+  </style>
+</div>
