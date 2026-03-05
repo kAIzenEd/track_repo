@@ -1,0 +1,169 @@
+/*
+  DESIGN SYSTEM: LIQUID GLASS
+  Color palette: mid dark blue · sea greenish blue · off white / light grey
+*/
+
+:root {
+  --glass-bg: rgba(214, 230, 243, 0.62);
+  --glass-border: rgba(180, 210, 235, 0.5);
+  --glass-shadow: 0 8px 32px 0 rgba(15, 40, 90, 0.14);
+  --glass-blur: 18px;
+  --glass-radius: 24px;
+  --glass-highlight: rgba(255, 255, 255, 0.55);
+
+  /* Brand palette — blue/teal */
+  --liquid-primary: #1d4ed8;      /* mid dark blue */
+  --liquid-secondary: #0891b2;    /* sea greenish blue */
+  --liquid-accent: #38bdf8;       /* light sky blue */
+
+  --text-main: #0f172a;
+  --text-muted: #4a6080;
+}
+
+/* ── Animated Liquid Background ─────────────────────────────────────────── */
+.liquid-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  overflow: hidden;
+  /* Off white / light grey base */
+  background: #dde8f2;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  animation: float 12s infinite ease-in-out;
+}
+
+/* Mid dark blue */
+.blob-1 {
+  top: -12%;
+  left: -8%;
+  width: 55vw;
+  height: 55vw;
+  background: rgba(2, 238, 255, 0.492);
+  animation-delay: 0s;
+}
+
+/* Sea greenish blue / teal */
+.blob-2 {
+  bottom: -12%;
+  right: -8%;
+  width: 60vw;
+  height: 60vw;
+  background: rgba(0, 204, 255, 0.568);
+  animation-delay: -5s;
+}
+
+/* Cool light grey / off-white highlight */
+.blob-3 {
+  top: 35%;
+  left: 38%;
+  width: 38vw;
+  height: 38vw;
+  background: rgba(224, 224, 224, 0.492);
+  animation-delay: -2.5s;
+}
+
+@keyframes float {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(28px, -48px) scale(1.08); }
+  66%  { transform: translate(-18px, 22px) scale(0.93); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* ── Glass Panel Base (fallback for non-Chrome) ──────────────────────────── */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-top: 1px solid var(--glass-highlight);
+  border-left: 1px solid var(--glass-highlight);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--glass-radius);
+  color: var(--text-main);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-panel:hover {
+  box-shadow: 0 12px 40px 0 rgba(15, 40, 90, 0.22);
+}
+
+/* ── Glass Inputs ────────────────────────────────────────────────────────── */
+.glass-input {
+  background: rgba(210, 228, 245, 0.55);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: var(--text-main);
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.glass-input:focus {
+  background: rgba(230, 242, 252, 0.85);
+  border-color: var(--liquid-primary);
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.18);
+}
+
+/* ── Glass Button (fallback) ─────────────────────────────────────────────── */
+.glass-button {
+  background: rgba(29, 78, 216, 0.12);
+  border: 1px solid rgba(29, 78, 216, 0.28);
+  color: var(--liquid-primary);
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.glass-button:hover {
+  background: rgba(29, 78, 216, 0.22);
+  transform: translateY(-2px);
+}
+
+/* ── Glass Table ─────────────────────────────────────────────────────────── */
+.glass-table-container {
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  background: rgba(210, 228, 245, 0.38);
+}
+
+.glass-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.glass-table th {
+  background: rgba(210, 228, 245, 0.55);
+  padding: 12px;
+  text-align: left;
+  font-weight: 700;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.glass-table td {
+  padding: 12px;
+  border-bottom: 1px solid rgba(180, 210, 235, 0.35);
+  color: var(--text-main);
+}
+
+.glass-table tr:last-child td {
+  border-bottom: none;
+}
+
+.glass-table tr:hover td {
+  background: rgba(210, 228, 245, 0.5);
+}

@@ -1,0 +1,621 @@
+================================================================================
+            COMPLETE FRONTEND CODE COMPILATION - kAI_track Project
+            Updated: March 4, 2026 | All Code + Dependencies + Config
+================================================================================
+
+================================================================================
+DIRECTORY STRUCTURE: frontend/
+================================================================================
+frontend/
+├── .gitignore
+├── README.md
+├── eslint.config.js
+├── index.html
+├── package-lock.json
+├── package.json
+├── vite.config.js
+├── node_modules/
+├── public/
+│   └── vite.svg
+└── src/
+    ├── App.css
+    ├── App.jsx
+    ├── index.css
+    ├── main.jsx
+    ├── ui_type_1.txt
+    ├── ui_type_2.txt
+    ├── api/
+    │   └── backend.js
+    ├── assets/
+    │   └── react.svg
+    └── components/
+        ├── MeetingSidebar.jsx
+        ├── TranscriptTable.jsx
+        └── UploadBox.jsx
+
+
+================================================================================
+SECTION: DEPENDENCIES & CONFIGURATION
+================================================================================
+
+================================================================================
+FILE: package.json
+PATH: frontend/package.json
+================================================================================
+
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "^1.13.5",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-dropzone": "^15.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "vite": "^8.0.0-beta.13"
+  },
+  "overrides": {
+    "vite": "^8.0.0-beta.13"
+  }
+}
+
+
+================================================================================
+FILE: .gitignore
+PATH: frontend/.gitignore
+================================================================================
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+
+================================================================================
+SECTION: BUILD & CONFIG FILES
+================================================================================
+
+================================================================================
+FILE: vite.config.js
+PATH: frontend/vite.config.js
+================================================================================
+
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+})
+
+
+================================================================================
+FILE: eslint.config.js
+PATH: frontend/eslint.config.js
+================================================================================
+
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import { defineConfig, globalIgnores } from 'eslint/config'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{js,jsx}'],
+    extends: [
+      js.configs.recommended,
+      reactHooks.configs.flat.recommended,
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        ecmaFeatures: { jsx: true },
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+    },
+  },
+])
+
+
+================================================================================
+FILE: index.html
+PATH: frontend/index.html
+================================================================================
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>frontend</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+
+
+================================================================================
+SECTION: SOURCE CODE - CORE
+================================================================================
+
+================================================================================
+FILE: src/main.jsx
+PATH: frontend/src/main.jsx
+================================================================================
+
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import "./index.css";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+
+================================================================================
+FILE: src/App.jsx
+PATH: frontend/src/App.jsx
+================================================================================
+
+import { useState, useEffect } from "react";
+import {
+  fetchMeetings,
+  fetchMeetingById,
+  transcribeAudio,
+} from "./api/backend";
+
+import UploadBox from "./components/UploadBox";
+import MeetingSidebar from "./components/MeetingSidebar";
+import TranscriptTable from "./components/TranscriptTable";
+
+import "./App.css";
+
+export default function App() {
+  const [status, setStatus] = useState("Drop an audio file to begin...");
+  const [segments, setSegments] = useState([]);
+  const [mode, setMode] = useState("accurate");
+  const [timeTaken, setTimeTaken] = useState(null);
+
+  const [meetings, setMeetings] = useState([]);
+  const [selectedMeeting, setSelectedMeeting] = useState(null);
+
+  async function loadMeetingHistory() {
+    try {
+      const data = await fetchMeetings();
+      setMeetings(data);
+    } catch (e) {
+      console.error("loadMeetings error", e);
+    }
+  }
+
+  useEffect(() => {
+    loadMeetingHistory();
+  }, []);
+
+  async function openMeeting(id) {
+    try {
+      setStatus("Loading saved transcript...");
+      setSelectedMeeting(id);
+      const data = await fetchMeetingById(id);
+      setSegments(data.transcript || []);
+      setStatus("✅ Loaded saved transcript!");
+    } catch (e) {
+      console.error("openMeeting error", e);
+      setStatus("❌ Failed to load transcript");
+    }
+  }
+
+  async function handleUpload(file) {
+    try {
+      setStatus("Uploading + Transcribing...");
+      setSegments([]);
+      setTimeTaken(null);
+
+      const start = performance.now();
+      const data = await transcribeAudio(file, mode);
+      const end = performance.now();
+
+      setTimeTaken(((end - start) / 1000).toFixed(2));
+      setSegments(data.segments || []);
+      setStatus("✅ Transcript Ready!");
+      await loadMeetingHistory();
+    } catch (e) {
+      console.error("upload error", e);
+      setStatus("❌ Transcription failed: " + (e?.message || e));
+    }
+  }
+
+  return (
+    <div className="app-shell">
+      <div className="app-grid">
+        {/* Sidebar */}
+        <div className="sidebar">
+          <MeetingSidebar
+            meetings={meetings}
+            selectedMeeting={selectedMeeting}
+            onSelect={openMeeting}
+          />
+        </div>
+
+        {/* Main Panel */}
+        <div className="main-panel">
+          <h1>kAI Track</h1>
+          <p>AI meeting transcription with timestamps.</p>
+
+          <div style={{ marginTop: 12, marginBottom: 12 }}>
+            <select
+              className="mode-select"
+              value={mode}
+              onChange={(e) => setMode(e.target.value)}
+            >
+              <option value="accurate">Accurate (Default)</option>
+              <option value="fast">Fast Mode</option>
+            </select>
+          </div>
+
+          <UploadBox onUpload={handleUpload} />
+
+          <p className="status-text">{status}</p>
+
+          {timeTaken && (
+            <p style={{ marginTop: 6 }}>
+              ⏱ Completed in <b>{timeTaken}s</b> ({mode})
+            </p>
+          )}
+
+          <TranscriptTable segments={segments} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+================================================================================
+SECTION: STYLING
+================================================================================
+
+================================================================================
+FILE: src/App.css
+PATH: frontend/src/App.css
+================================================================================
+
+/* App layout + Liquid glass panels */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 35px;
+}
+
+.app-grid {
+  width: 100%;
+  max-width: 1200px;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 25px;
+}
+
+/* Sidebar glass */
+.sidebar {
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 22px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow: 0 12px 34px rgba(0,0,0,0.06);
+  height: 85vh;
+  overflow-y: auto;
+}
+
+/* Meeting list header handled inside component */
+
+/* Meeting button base */
+.meeting-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 14px;
+  border: none;
+  margin-bottom: 10px;
+  font-size: 13px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.65);
+  text-align: left;
+  transition: transform .15s ease, background .15s ease;
+}
+.meeting-btn:hover { transform: translateY(-3px); }
+.meeting-btn.active {
+  background: rgba(99,102,241,0.14);
+  font-weight: 700;
+}
+
+/* Main panel glass */
+.main-panel {
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 24px;
+  padding: 36px;
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+  height: 85vh;
+  overflow-y: auto;
+}
+
+/* Mode select style (keeps consistent look) */
+.mode-select {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.8);
+}
+
+/* Upload box */
+.upload-box {
+  border: 2px dashed rgba(99,102,241,0.35);
+  border-radius: 18px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  margin-top: 12px;
+  background: rgba(255,255,255,0.5);
+  transition: transform .12s ease, border-color .12s ease;
+}
+.upload-box:hover {
+  transform: translateY(-3px);
+  border-color: rgba(99,102,241,0.7);
+}
+
+/* status text */
+.status-text {
+  margin-top: 12px;
+  font-weight: 600;
+}
+
+/* transcript */
+.transcript-table {
+  width: 100%;
+  margin-top: 20px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.transcript-table table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.transcript-table thead tr { background: rgba(238,242,255,0.85); }
+.transcript-table th, .transcript-table td { padding: 12px; text-align: left; }
+.transcript-table tr:nth-child(even) td { background: rgba(250,250,251,0.6); }
+
+
+================================================================================
+FILE: src/index.css
+PATH: frontend/src/index.css
+================================================================================
+
+/* global reset + ensure root fills screen */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  background: radial-gradient(circle at top, #f8fafc, #eef2ff, #e0e7ff);
+  color: #111;
+  box-sizing: border-box;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+
+button { font-family: inherit; }
+
+
+================================================================================
+SECTION: API & UTILITIES
+================================================================================
+
+================================================================================
+FILE: src/api/backend.js
+PATH: frontend/src/api/backend.js
+================================================================================
+
+import axios from "axios";
+
+export const BACKEND_URL = "http://172.28.255.166:8000";
+
+export async function fetchMeetings() {
+  const res = await axios.get(`${BACKEND_URL}/meetings`);
+  return res.data;
+}
+
+export async function fetchMeetingById(id) {
+  const res = await axios.get(`${BACKEND_URL}/meetings/${id}`);
+  return res.data;
+}
+
+export async function transcribeAudio(file, mode = "accurate") {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await axios.post(`${BACKEND_URL}/transcribe?mode=${mode}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+    timeout: 0, // long running transcripts
+  });
+  return res.data;
+}
+
+
+================================================================================
+SECTION: COMPONENTS
+================================================================================
+
+================================================================================
+FILE: src/components/UploadBox.jsx
+PATH: frontend/src/components/UploadBox.jsx
+================================================================================
+
+import React from "react";
+import { useDropzone } from "react-dropzone";
+
+export default function UploadBox({ onUpload }) {
+  const { getRootProps, getInputProps } = useDropzone({
+    accept: {
+      "audio/wav": [".wav"],
+      "audio/mpeg": [".mp3"],
+    },
+    multiple: false,
+    onDrop: (acceptedFiles) => {
+      if (acceptedFiles && acceptedFiles.length > 0) {
+        onUpload(acceptedFiles[0]);
+      }
+    },
+  });
+
+  return (
+    <div {...getRootProps()} className="upload-box" role="button">
+      <input {...getInputProps()} />
+      <p style={{ fontSize: 16, fontWeight: 700 }}>Drag & Drop audio here</p>
+      <p style={{ fontSize: 13, color: "#666" }}>Supports .wav and .mp3 — or click to browse</p>
+    </div>
+  );
+}
+
+
+================================================================================
+FILE: src/components/MeetingSidebar.jsx
+PATH: frontend/src/components/MeetingSidebar.jsx
+================================================================================
+
+import React from "react";
+import GlassPanel from "./ui/GlassPanel";
+
+export default function MeetingSidebar({ meetings = [], selectedMeeting, onSelect }) {
+  return (
+    <GlassPanel className="sidebar" style={{ height: "85vh", padding: "18px", display: "flex", flexDirection: "column" }}>
+      <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12, color: "var(--text-main)" }}>
+        📂 Meeting History
+      </h2>
+      
+      <div style={{ overflowY: "auto", flex: 1, paddingRight: "5px" }}>
+        {meetings.length === 0 && (
+          <p style={{ color: "var(--text-muted)", fontSize: 14 }}>No meetings yet...</p>
+        )}
+        
+        {meetings.map((m) => (
+          <button
+            key={m.id}
+            className={`glass-button ${selectedMeeting === m.id ? "active" : ""}`}
+            onClick={() => onSelect(m.id)}
+            style={{
+              width: "100%",
+              marginBottom: "10px",
+              textAlign: "left",
+              background: selectedMeeting === m.id ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.4)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center"
+            }}
+          >
+            <div style={{ minWidth: 0, overflow: "hidden" }}>
+              <div style={{ fontWeight: 700, fontSize: 13 }}>#{m.id}</div>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {m.audio_file}
+              </div>
+            </div>
+            <div style={{ color: "var(--text-muted)", fontSize: 10 }}>
+              {new Date(m.created_at).toLocaleDateString()}
+            </div>
+          </button>
+        ))}
+      </div>
+    </GlassPanel>
+  );
+}
+================================================================================
+FILE: src/components/TranscriptTable.jsx
+PATH: frontend/src/components/TranscriptTable.jsx
+================================================================================
+
+import React from "react";
+import GlassPanel from "./ui/GlassPanel";
+
+export default function TranscriptTable({ segments = [] }) {
+  if (!segments || segments.length === 0) return null;
+
+  return (
+    <GlassPanel className="glass-table-container" style={{ marginTop: "20px" }}>
+      <table className="glass-table">
+        <thead>
+          <tr>
+            <th style={{ width: "80px" }}>Speaker</th>
+            <th style={{ width: "80px" }}>Start</th>
+            <th style={{ width: "80px" }}>End</th>
+            <th>Text</th>
+          </tr>
+        </thead>
+        <tbody>
+          {segments.map((seg, i) => (
+            <tr key={i}>
+              <td style={{ fontFamily: "monospace", fontSize: "12px" }}>{seg.speaker || "—"}</td>
+              <td style={{ fontFamily: "monospace", fontSize: "12px" }}>{seg.start}s</td>
+              <td style={{ fontFamily: "monospace", fontSize: "12px" }}>{seg.end}s</td>
+              <td>{seg.text}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </GlassPanel>
+  );
+}

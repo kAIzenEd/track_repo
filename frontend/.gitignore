@@ -22,3 +22,48 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# -----------------------------
+# Python environments
+# -----------------------------
+venv/
+venv_pyannote/
+.env
+
+# -----------------------------
+# Python cache
+# -----------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# -----------------------------
+# Node / React
+# -----------------------------
+node_modules/
+npm-debug.log
+
+# -----------------------------
+# ML model caches
+# -----------------------------
+.cache/
+~/.cache/
+*.pt
+*.bin
+
+# -----------------------------
+# Storage outputs
+# -----------------------------
+backend/storage/audio/*
+backend/storage/transcripts/*
+
+# keep folders but not files
+!backend/storage/audio/.keep
+!backend/storage/transcripts/.keep
+
+# -----------------------------
+# OS junk
+# -----------------------------
+.DS_Store
+Thumbs.db

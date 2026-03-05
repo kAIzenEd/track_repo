@@ -1,0 +1,803 @@
+================================================================================
+              COMPLETE BACKEND CODE COMPILATION - kAI_track Project
+              Updated: March 2, 2026 | All Code + Dependencies
+================================================================================
+
+================================================================================
+SECTION: DEPENDENCIES & CONFIGURATION
+================================================================================
+
+================================================================================
+FILE: requirements.txt
+PATH: requirements.txt (Root)
+================================================================================
+
+fastapi
+uvicorn[standard]
+sqlalchemy
+python-multipart
+
+torch==2.2.2
+torchaudio==2.2.2
+whisperx
+faster-whisper
+
+numpy<2
+
+
+================================================================================
+FILE: .env
+PATH: backend/.env
+================================================================================
+
+HF_TOKEN = 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
+
+
+================================================================================
+SECTION: CORE DATABASE & MODELS
+================================================================================
+
+================================================================================
+FILE: db.py
+PATH: backend/db.py
+================================================================================
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker 
+
+DATABASE_DIR = "sqlite:///backend/storage/kai_track.db"
+
+engine = create_engine(DATABASE_DIR, connect_args = {"check_same_thread": False})
+
+#Session factory used for DB queries
+SessionLocal = sessionmaker(autocommit = False, 
+                            autoflush = False, bind = engine)
+
+#Base Class for all DB models
+Base  = declarative_base()
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+================================================================================
+FILE: models.py
+PATH: backend/models.py
+================================================================================
+
+from sqlalchemy import Column, Integer, String, DateTime, JSON
+from datetime import datetime
+from zoneinfo import ZoneInfo
+from backend.db import Base
+
+class Meeting(Base):
+    #Stores a single meeting audio + transcript
+
+    __tablename__ = "meetings"
+    id = Column(Integer, primary_key = True, index = True)
+
+    #uploaded audio file
+    audio_file = Column(String, index = True)
+
+    #transcript segment with timestamps
+    transcript = Column(JSON, index = True)
+
+    #Timestamp of save
+    created_at = Column(DateTime, default = datetime.now(ZoneInfo("Asia/Kolkata")))
+
+
+================================================================================
+FILE: init_db.py
+PATH: backend/init_db.py
+================================================================================
+
+from backend.db import engine
+from backend.models import Base
+
+def init_db():
+    print("Wooooooow the Database is being made, sickkk!!!!")
+    Base.metadata.create_all(bind = engine)
+    print("Yessssss the Database is initilalized, dopee XD!!!!!")
+
+if __name__ == "__main__":
+    init_db()
+
+
+================================================================================
+SECTION: MAIN APPLICATION
+================================================================================
+
+================================================================================
+FILE: main.py
+PATH: backend/main.py
+================================================================================
+
+from fastapi import FastAPI, UploadFile, File, Depends
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+
+from sqlalchemy.orm import Session
+
+import shutil
+import os
+import json
+from datetime import datetime
+import time
+
+from backend.services.transcribe import transcribe_audio
+from backend.db import get_db
+from backend.models import Meeting
+
+
+app = FastAPI(
+    title="kAI Track",
+    description=(
+        "kAI Track is a local-first AI meeting assistant that converts audio recordings into readable meeting transcripts with timestamps. It eliminates the need for manual note-taking by providing a structured, searchable record of your discussions, while providing summaries and insights through an AI agent which also assigns tasks to participants and provides a task manager."
+    ),
+    version="v0.1",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+AUDIO_DIR = "backend/storage/audio"
+TRANSCRIPT_DIR = "backend/storage/transcripts"
+
+# Make sure folders exist so nothing crashes randomly
+os.makedirs(AUDIO_DIR, exist_ok=True)
+os.makedirs(TRANSCRIPT_DIR, exist_ok=True)
+
+
+@app.get("/")
+def home():
+    return {"status": "kAI Track Backend Up and Walking (hehehe Running)...."}
+
+
+@app.post("/transcribe")
+async def transcribe(
+    file: UploadFile = File(...),
+    mode: str = "accurate",
+    db: Session = Depends(get_db),
+):
+    """
+    Upload audio (.wav, .mp3) -> returns transcript -> saves locally + saves into DB
+    """
+
+    # Upload audio -> returns transcript -> saves to local
+    if not file.filename.lower().endswith((".wav", ".mp3", ".aac")):
+        return JSONResponse(
+            status_code=400,
+            content={
+                "error": "This will not do!!! Upload only .wav, .mp3 or .aac files >:|"
+            },
+        )
+
+    # Saving audio file locally
+    audio_path = os.path.join(AUDIO_DIR, file.filename)
+
+    with open(audio_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    start_time = time.time()
+
+    # Run Transcription (backend does the heavy lifting)
+    segments = transcribe_audio(audio_path, mode=mode)
+
+    end_time = time.time()
+    transcribe_seconds = round(end_time - start_time, 2)
+
+    print(f"\nDayum, it literally took {transcribe_seconds} seconds in dis ({mode})\n")
+
+    # Format Transcript Output neatly
+    transcript_segments = [
+        {
+            "start": round(seg["start"], 2),
+            "end": round(seg["end"], 2),
+            "text": seg["text"].strip(),
+        }
+        for seg in segments
+    ]
+
+    # Save transcript into SQLite DB (Meeting table)
+    meeting = Meeting(
+        audio_file=file.filename,
+        transcript=transcript_segments,
+    )
+
+    db.add(meeting)
+    db.commit()
+    db.refresh(meeting)
+
+    # Save transcript JSON File also (local storage backup)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    transcript_filename = f"{file.filename}_{timestamp}.json"
+    transcript_path = os.path.join(TRANSCRIPT_DIR, transcript_filename)
+
+    transcript_data = {
+        "meeting_id": meeting.id,
+        "audio_file": file.filename,
+        "created_at": timestamp,
+        "mode": mode,
+        "segments": transcript_segments,
+    }
+
+    with open(transcript_path, "w", encoding="utf-8") as f:
+        json.dump(transcript_data, f, indent=4)
+
+    # Return Message
+    return {
+        "message": "Yo yo yo, da audio been done transcribed.....",
+        "meeting_id": meeting.id,
+        "audio_file": file.filename,
+        "mode_used": mode,
+        "transcription_time_seconds": transcribe_seconds,
+        "transcript_saved_as": transcript_filename,
+        "segments": transcript_segments,
+    }
+
+
+@app.get("/meetings/{meeting_id}")
+def get_meeting(meeting_id: int, db: Session = Depends(get_db)):
+
+    meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+
+    if not meeting:
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Meeting not found"}
+        )
+
+    return {
+        "id": meeting.id,
+        "audio_file": meeting.audio_file,
+        "created_at": meeting.created_at,
+        "transcript": meeting.transcript,
+    }
+
+
+@app.get("/list_meetings")
+def get_meeting(meeting_id: int, db: Session = Depends(get_db)):
+    #returns entire metadata of one meeting using id value
+
+    meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+
+    if meeting is None:
+        return JSONResponse(status_code = 404,
+                             content = {"error": f"Don't you get it this meetind id {meeting_id} doesn't exist?!"},)
+    return{
+        "id": meeting.id,
+        "audio_file": meeting.audio_file,
+        "created_at": meeting.created_at,
+        "transcript": meeting.transcript,
+    }
+
+@app.delete("/meetings/{meeting_id}")
+def delete_meeting(meeting_id: int, db: Session = Depends(get_db)):
+    meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+
+    if not meeting:
+        return JSONResponse(status_code=404, content={"error": "Meeting not found"})
+
+    db.delete(meeting)
+    db.commit()
+
+    return {"message": f"Meeting {meeting_id} deleted"}
+
+
+================================================================================
+SECTION: SERVICES - TRANSCRIPTION
+================================================================================
+
+================================================================================
+FILE: services/transcribe.py
+PATH: backend/services/transcribe.py
+================================================================================
+
+import whisperx
+import torch
+
+
+# Use GPU if available
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+
+def transcribe_audio(audio_path: str, mode: str = "accurate"):
+    """
+    Transcribes an audio file (WAV/MP3) into timestamped text segments.
+    """
+
+    print("Loading WhisperX model...")
+
+    if mode == "fast":
+        model_name = "medium"
+        compute_type = "int8"
+    else:
+        model_name = "large-v3-turbo"
+        compute_type = "float16"
+
+    print(f"Tryin' real hard to load this stuff bro: {model_name} ({mode})")
+
+    model = whisperx.load_model(
+        model_name,
+        device=device,
+        compute_type=compute_type,
+        vad_method="silero"
+    )
+
+    print("Tryna transcribe dis audio bruv......")
+
+    result = model.transcribe(audio_path)
+
+    print("Yo yo yo, da audio been done transcribed....\n")
+
+    segments = result["segments"]
+
+# Split long segments into smaller ones
+    segments = split_segments(segments, max_duration=3.0)
+
+    return segments
+
+
+def split_segments(segments, max_duration=3.0):
+    """
+    Splits long Whisper segments into smaller chunks.
+    max_duration = maximum seconds per segment.
+    """
+
+    new_segments = []
+
+    for seg in segments:
+        start = seg["start"]
+        end = seg["end"]
+        text = seg["text"].strip()
+
+        duration = end - start
+
+        # If already short enough, keep as-is
+        if duration <= max_duration:
+            new_segments.append(seg)
+            continue
+
+        # Otherwise split into smaller parts
+        midpoint = start + duration / 2
+
+        words = text.split()
+        half = len(words) // 2
+
+        seg1 = {
+            "start": start,
+            "end": midpoint,
+            "text": " ".join(words[:half])
+        }
+
+        seg2 = {
+            "start": midpoint,
+            "end": end,
+            "text": " ".join(words[half:])
+        }
+
+        new_segments.append(seg1)
+        new_segments.append(seg2)
+
+    return new_segments
+
+
+================================================================================
+SECTION: SERVICES - DIARIZATION
+================================================================================
+
+================================================================================
+FILE: services/diarize/run_pyannote.py
+PATH: backend/services/diarize/run_pyannote.py
+================================================================================
+
+import sys
+import json
+import os
+import warnings
+from pathlib import Path
+
+import torch
+from dotenv import load_dotenv
+from pyannote.audio import Pipeline
+
+# -----------------------------
+# Suppress non-actionable warnings
+# -----------------------------
+warnings.filterwarnings("ignore", message="std(): degrees of freedom is <= 0")
+warnings.filterwarnings("ignore", category=UserWarning, module="pyannote.audio.models.blocks.pooling")
+
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
+
+MODEL_ID = "pyannote/speaker-diarization-community-1"
+
+
+def load_pipeline(token: str | None):
+    if token:
+        pipeline = Pipeline.from_pretrained(MODEL_ID, token=token)
+    else:
+        pipeline = Pipeline.from_pretrained(MODEL_ID, local_files_only=True)
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    pipeline.to(device)
+    return pipeline
+
+
+def extract_segments(output):
+    segments = []
+
+    # Handle wrapper types
+    if hasattr(output, "speaker_diarization"):
+        output = output.speaker_diarization
+
+    if hasattr(output, "itertracks"):
+        for segment, _, speaker in output.itertracks(yield_label=True):
+            segments.append({
+                "start": round(segment.start, 3),
+                "end": round(segment.end, 3),
+                "speaker": speaker
+            })
+        return segments
+
+    raise TypeError(f"Unsupported diarization output type: {type(output)}")
+
+
+def main():
+    if len(sys.argv) < 2:
+        print(json.dumps({"error": "Audio path argument required"}))
+        sys.exit(1)
+
+    audio_path = sys.argv[1]
+
+    if not Path(audio_path).exists():
+        print(json.dumps({"error": f"Audio file not found: {audio_path}"}))
+        sys.exit(1)
+
+    # Load token if exists
+    project_root = Path(__file__).resolve().parents[3]
+    env_path = project_root / "backend" / ".env"
+    load_dotenv(dotenv_path=env_path)
+    token = os.getenv("HF_TOKEN")
+
+    try:
+        pipeline = load_pipeline(token)
+        output = pipeline(audio_path)
+        segments = extract_segments(output)
+
+        print(json.dumps({
+            "success": True,
+            "segments": segments
+        }))
+
+        sys.exit(0)
+
+    except Exception as e:
+        print(json.dumps({
+            "success": False,
+            "error": str(e)
+        }))
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
+
+
+================================================================================
+SECTION: SERVICES - STUBS (EMPTY, FOR FUTURE DEVELOPMENT)
+================================================================================
+
+================================================================================
+FILE: services/actions.py
+PATH: backend/services/actions.py
+================================================================================
+
+[EMPTY FILE - Reserved for future action-item extraction features]
+
+
+================================================================================
+FILE: services/summarize.py
+PATH: backend/services/summarize.py
+================================================================================
+
+[EMPTY FILE - Reserved for future meeting summarization features]
+
+
+================================================================================
+SECTION: PROJECT DOCUMENTATION
+================================================================================
+
+================================================================================
+FILE: README.md (Project Root)
+PATH: README.md
+================================================================================
+
+# kAI Track
+
+> AI-driven meeting assistant MVP for structured transcription and meeting intelligence.
+
+---
+
+## Introduction
+
+**kAI Track** is a local-first AI-powered meeting assistant designed to transcribe meeting audio into structured, timestamped text. It stores meeting history and lays the foundation for advanced features such as speaker diarization, summarization, and action-item extraction.
+
+This MVP is built with:
+
+- **Backend:** FastAPI  
+- **Database:** SQLite  
+- **Frontend:** React (Vite)  
+- **Transcription Engine:** Whisper  
+
+---
+
+## Current Features (Sprint 1 Complete)
+
+- Audio upload and transcription using Whisper (accurate and fast modes)
+- Timestamped transcript segmentation
+- Automatic saving of transcripts to:
+  - Local JSON files
+  - SQLite database
+- Meeting history API endpoints
+- React MVP dashboard:
+  - Drag-and-drop audio upload
+  - Structured transcript display
+  - Meeting archive sidebar with retrieval
+
+---
+
+## Upcoming Features (Sprint 2 and Beyond)
+
+- Speaker diarization ("who said what")
+- Speaker labeling and renaming in the UI
+- LLM-powered meeting summarization
+- Action-item extraction and assignment
+- Task manager integration and workflow completion
+
+---
+
+## Installation & Setup
+
+### 1. Install Git
+
+#### WSL / Ubuntu
+```bash
+sudo apt update
+sudo apt install -y git curl unzip
+git --version
+```
+
+#### Windows (PowerShell)
+Download installer: https://git-scm.com/download/win
+
+### 2. Clone the Repository
+
+#### WSL / Ubuntu
+```bash
+cd ~/projects
+git clone https://github.com/kAIzenEd/track_repo.git
+cd track_repo
+```
+
+#### Windows (PowerShell)
+```
+cd C:\Users\<YourUser>\projects
+git clone https://github.com/kAIzenEd/track_repo.git
+cd track_repo
+```
+
+### 3. Install Python 3.12
+
+#### WSL / Ubuntu
+```bash
+sudo apt install -y python3.12 python3.12-venv python3-pip
+python3.12 --version
+```
+
+#### Windows
+Download installer: https://www.python.org/downloads/release/python-3123/
+
+### 4. Create Virtual Environment
+
+#### WSL / Ubuntu
+```bash
+python3.12 -m venv venv
+source venv/bin/activate
+```
+
+#### Windows (PowerShell)
+```
+python -m venv venv
+venv\Scripts\activate
+```
+
+### 5. Install uv (Optional, faster)
+
+#### macOS / Linux / WSL
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+#### Windows (PowerShell)
+```
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+### 6. Install Python Dependencies
+
+```bash
+# Using uv (recommended)
+uv pip install -r requirements.txt
+
+# Or using pip
+pip install -r requirements.txt
+```
+
+### 7. Create Storage Directories
+
+```bash
+mkdir -p backend/storage/audio
+mkdir -p backend/storage/transcripts
+```
+
+### 8. Initialize the Database
+
+```bash
+python -m backend.init_db
+```
+
+### 9. Run Backend (FastAPI)
+
+```bash
+uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Access: http://localhost:8000/docs
+
+### 10. Run Frontend (React/Vite)
+
+```bash
+cd frontend
+npm install
+npm run dev -- --host 0.0.0.0 --port 5173
+```
+
+Access: http://localhost:5173
+
+---
+
+## API Endpoints
+
+### GET /
+Health check endpoint.
+
+### POST /transcribe
+Upload audio file for transcription.
+
+**Parameters:**
+- `file` (UploadFile): Audio file (.wav, .mp3, .aac)
+- `mode` (str): "accurate" or "fast"
+
+**Response:**
+```json
+{
+  "message": "Yo yo yo, da audio been done transcribed.....",
+  "meeting_id": 1,
+  "audio_file": "example.wav",
+  "mode_used": "accurate",
+  "transcription_time_seconds": 45.2,
+  "transcript_saved_as": "example.wav_20260302_120000.json",
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 2.5,
+      "text": "Hello, this is a test."
+    }
+  ]
+}
+```
+
+### GET /meetings/{meeting_id}
+Retrieve a specific meeting by ID.
+
+### GET /list_meetings
+List all meetings (currently returns one by meeting_id parameter).
+
+### DELETE /meetings/{meeting_id}
+Delete a meeting record.
+
+---
+
+## Tech Stack Details
+
+### Backend
+- **FastAPI**: Modern async Python web framework
+- **SQLAlchemy**: ORM for database operations
+- **SQLite**: Lightweight local database
+- **WhisperX**: Enhanced Whisper transcription
+- **Torch/Torchaudio**: GPU acceleration for models
+- **Pyannote**: Speaker diarization (future integration)
+
+### Frontend
+- **React 19.2**: UI library
+- **Vite**: Lightning-fast build tool
+- **Axios**: HTTP client
+- **React Dropzone**: File upload component
+- **CSS Grid/Flexbox**: Responsive liquid-glass UI
+
+---
+
+## Storage Structure
+
+```
+backend/storage/
+├── kai_track.db          # SQLite database
+├── audio/                # Uploaded audio files
+└── transcripts/          # JSON transcript outputs
+    └── {filename}_{timestamp}.json
+```
+
+---
+
+## Contributing
+
+This is an MVP project. Future sprints include:
+- Advanced diarization
+- Multi-language support
+- Real-time transcription streaming
+- Action item extraction via LLM
+
+---
+
+## License
+
+[To be determined]
+
+
+================================================================================
+CONFIGURATION & SETUP SUMMARY
+================================================================================
+
+PYTHON DEPENDENCIES (from requirements.txt):
+- fastapi: Web framework
+- uvicorn[standard]: ASGI server
+- sqlalchemy: ORM
+- python-multipart: Form data parsing
+- torch==2.2.2: PyTorch (GPU support)
+- torchaudio==2.2.2: Audio processing
+- whisperx: Enhanced Whisper transcription
+- faster-whisper: Optimized inference
+- numpy<2: Numerical computing (version constraint for compatibility)
+
+ENVIRONMENT VARIABLES:
+- HF_TOKEN: Hugging Face API token for model downloads (Pyannote)
+
+DATABASE:
+- Location: backend/storage/kai_track.db
+- Type: SQLite3
+- Tables: meetings (id, audio_file, transcript, created_at)
+
+STORAGE DIRECTORIES:
+- backend/storage/audio/: Uploaded audio files
+- backend/storage/transcripts/: JSON transcript backups
+
+EXECUTION:
+- Backend: uvicorn backend.main:app --reload
+- Frontend: cd frontend && npm run dev
+- DB Init: python -m backend.init_db
+
+================================================================================
+END OF COMPILATION
+================================================================================

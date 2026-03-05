@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+venv/
+venv_pyannote/
+
+# Build and environment
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Mac
+.DS_Store
+
+# Local storage and DB
+backend/storage/audio/
+backend/storage/transcripts/
+backend/storage/*.db
+backend/storage/*.db-journal
+
+# Logs
+logs/
+*.log
+
+# Misc
+.pytest_cache/
+.vscode/
+.idea/

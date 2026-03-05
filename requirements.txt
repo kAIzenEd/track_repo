@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+python-multipart
+
+torch==2.2.2
+torchaudio==2.2.2
+whisperx
+faster-whisper
+
+numpy<2

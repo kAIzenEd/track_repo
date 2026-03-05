@@ -64,225 +64,117 @@ This MVP is built with:
 
 ---
 
-## Project Structure
+## Project Architecture
 
-```
-kAI_track/
-│
-├── backend/
-│   ├── main.py                # FastAPI entrypoint
-│   ├── db.py                  # Database engine + session
-│   ├── models.py              # SQLAlchemy meeting model
-│   ├── init_db.py             # Initializes SQLite database
-│   │
-│   ├── services/
-│   │   └── transcribe.py       # Whisper transcription logic
-│   │
-│   ├── storage/
-│       ├── kai_track.db        # SQLite database file
-│       ├── audio/              # Uploaded audio files
-│       └── transcripts/        # Saved transcript JSON outputs
-│
-├── frontend/
-│   ├── src/
-│   │   ├── App.jsx             # Main UI orchestration
-│   │   ├── App.css             # Liquid-glass style UI base
-│   │   ├── index.css           # Global styling
-│   │   │
-│   │   ├── api/
-│   │   │   └── backend.js       # Backend request helpers
-│   │   │
-│   │   └── components/
-│   │       ├── UploadBox.jsx
-│   │       ├── MeetingSidebar.jsx
-│   │       └── TranscriptTable.jsx
-│   │
-│   └── package.json
-│
-├── README.md
-└── whisper_test.py             # Early experimentation file
-```
+This project uses a **Two-Venv Architecture** to prevent dependency conflicts between `faster-whisper` and `pyannote.audio`.
+
+1. **Main Environment (`venv`)**:
+   - Runs the FastAPI web server, SQLite database, and WhisperX transcription.
+   - Dependencies: `requirements-main.txt`
+2. **Pyannote Environment (`venv_pyannote`)**:
+   - Strictly used by the backend via a subprocess to perform speaker diarization.
+   - Dependencies: `requirements-diarize.txt`
+
+The frontend is a standard Vite + React application in the `frontend/` folder.
 
 ---
 
-# Installation & Setup
+# 🚀 Getting Started (Beginner Guide)
+
+This guide is for anyone setting up the project for the first time on **Windows**. Follow these steps exactly.
 
 ---
 
-## 1. Install Git
+## Step 1: Install the Tools
+You need three main things installed on your computer:
+1. **Git**: Used to download and update code. [Download here](https://git-scm.com/download/win).
+2. **Python 3.12**: The language the "brain" of the app uses. [Download here](https://www.python.org/downloads/release/python-3123/). 
+   - **IMPORTANT**: During installation, check the box that says **"Add Python to PATH"**.
+3. **Node.js**: Used for the "visual" part of the app. [Download here (LTS version)](https://nodejs.org/).
 
-### WSL / Ubuntu
+---
 
-```bash
-sudo apt update
-sudo apt install -y git curl unzip
-git --version
-```
-### Windows (PowerShell)
-#### Download and run the installer:
-```
-https://git-scm.com/download/win
-```
-### Verify:
-```
-git --version
-```
-##### 2. Authenticate with GitHub (Recommended: GitHub CLI)
-##### Using gh avoids token copy/paste issues when cloning private repositories.
+## Step 2: Clone the Project
+1. Open **PowerShell** (Click Start, type "PowerShell").
+2. Type these commands one by one:
+   ```powershell
+   cd Desktop
+   git clone https://github.com/kAIzenEd/track_repo.git
+   cd track_repo
+   ```
 
-### WSL / Ubuntu
-```
-sudo apt install -y gh
-gh auth login
-```
-Choose:
+---
 
-GitHub.com
+## Step 3: Setup the Backend (The "Brain")
+The app uses two separate environments to keep things clean and avoid crashes.
 
-HTTPS
+### 3a. Main Environment (Transcription)
+1. In the same PowerShell window, type:
+   ```powershell
+   python -m venv venv
+   .\venv\Scripts\activate
+   pip install uv
+   uv pip install -r requirements-main.txt
+   ```
+2. Keep this window open.
 
-Authenticate with browser
+### 3b. Diarization Environment (Speaker Identification)
+1. Open a **SECOND** PowerShell window.
+2. Navigate to the project folder:
+   ```powershell
+   cd Desktop/track_repo
+   ```
+3. Type these commands:
+   ```powershell
+   python -m venv backend\services\diarize\venv_pyannote
+   .\backend\services\diarize\venv_pyannote\Scripts\activate
+   pip install uv
+   uv pip install -r requirements-diarize.txt
+   ```
+4. You can close this second window after it finishes.
 
-### Windows (PowerShell)
-```
-winget install --id GitHub.cli
-gh auth login
-```
-### 3. Clone the Repository
-Replace with your repository if different.
+---
 
-### WSL / Ubuntu
-```
-cd ~/projects
-git clone https://github.com/kAIzenEd/track_repo.git
-cd track_repo
-```
-### Windows (PowerShell)
-```
-cd C:\Users\<YourUser>\projects
-git clone https://github.com/kAIzenEd/track_repo.git
-cd track_repo
-```
-If the repository is private and prompts for credentials, ensure gh auth login has been completed.
+## Step 4: Configure & Initialize
+1. Go back to your **FIRST** PowerShell window (the one where `(venv)` is visible on the left).
+2. Create your storage folders:
+   ```powershell
+   mkdir -p backend/storage/audio
+   mkdir -p backend/storage/transcripts
+   ```
+3. Initialize the database:
+   ```powershell
+   python -m backend.init_db
+   ```
+4. **HuggingFace Token**: 
+   - Create a file named `.env` inside the `backend` folder.
+   - Go to [Hugging Face](https://huggingface.co/settings/tokens) and get a token.
+   - Paste this inside your `.env` file: `HF_TOKEN=your_token_here`
 
-## 4. Install Python 3.12
-### WSL / Ubuntu
-```
-sudo apt install -y python3.12 python3.12-venv python3-pip
-python3.12 --version
-```
-### Windows
-```
-Download installer:
-https://www.python.org/downloads/release/python-3123/
+---
 
-During installation:
+## Step 5: Run the App!
+You need two things running at the same time:
 
-Check "Add Python to PATH"
-```
-#### Verify:
-```
-python --version
-```
-## 5. Create and Activate a Python Virtual Environment
-### WSL / Ubuntu
-```
-python3.12 -m venv venv
-source venv/bin/activate
-```
-### Windows (PowerShell)
-```
-python -m venv venv
-venv\Scripts\activate
-```
-## 6. Install uv
-### macOS / Linux / WSL
-```
-curl -LsSf https://astral.sh/uv/install.sh | sh
-uv --version
-```
-### Windows (PowerShell)
-```
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-uv --version
-```
-If uv is unavailable, you may use pip install directly.
-
-## 7. Install Python Dependencies
-##### If requirements.txt exists:
-```
-uv pip install -r requirements.txt
-```
-##### Otherwise, install core backend dependencies:
-```
-uv pip install fastapi uvicorn[standard] sqlalchemy python-multipart requests
-uv pip install numpy==1.26.4
-uv pip install torch torchaudio
-uv pip install whisperx faster-whisper
-```
-## Notes
-### numpy < 2 (1.26.4) is required.
-
-For GPU acceleration, install the correct torch wheel for your CUDA version from:
-https://pytorch.org/
-
-## 8. Create Storage Directories
-```
-mkdir -p backend/storage/audio
-mkdir -p backend/storage/transcripts
-```
-## 9. Initialize the Database
-```
-python -m backend.init_db
-```
-This creates:
-```
-backend/storage/kai_track.db
-```
-## 10. Run the Backend (FastAPI)
-### Development (Linux / WSL)
-```
-uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
-```
-### Windows
-```
+### 1. The Backend
+In your PowerShell window with `(venv)` active:
+```powershell
 uvicorn backend.main:app --reload
 ```
-Verify:
 
-Open:
-```
-http://localhost:8000/docs
-```
-(Use WSL IP if accessing from Windows browser.)
+### 2. The Frontend (The Visuals)
+1. Open a **NEW** PowerShell window.
+2. Type:
+   ```powershell
+   cd Desktop/track_repo/frontend
+   npm install
+   npm run dev
+   ```
+3. Open your browser and go to the link it shows (usually `http://localhost:5173`).
 
-## 11. Frontend: Install and Run (React / Vite)
-```
-cd frontend
-npm install
-npm run dev -- --host 0.0.0.0 --port 5173
-```
-Open the URL printed by Vite (usually):
-```
-http://localhost:5173
-```
-## 12. Test End-to-End
-+ Ensure backend is running.
-+ Ensure frontend is running.
-+ Open the frontend UI.
-+ Upload a .wav or .mp3 file.
+---
 
-Confirm:
+# 🛠 Project Architecture (Technical)
 
-* File uploads to /transcribe
-* Transcript JSON is saved in backend/storage/transcripts
-* Meeting appears in /meetings
-* Meeting appears in frontend sidebar
+This project uses a **Two-Venv Architecture**...
 
-## 13. Useful Verification Commands
-- git status
-- python --version
-- uv --version
-- npm -v
-- node -v
-- uvicorn --version
