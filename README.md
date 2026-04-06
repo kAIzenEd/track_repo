@@ -59,8 +59,10 @@ This MVP is built with:
 - Speaker diarization ("who said what")
 - Speaker labeling and renaming in the UI
 - LLM-powered meeting summarization
-- Action-item extraction and assignment
-- Task manager integration and workflow completion
+
+## Sprint 3 (Complete)
+- **Local AI Agents:** Fully integrated Ollama for private, on-device Insights generation.
+- **Agent Roles:** Setup CrewAI / Multi-agent pipelines to handle distinct summary, action item, and process improvement tasks.
 
 ---
 
@@ -79,102 +81,75 @@ The frontend is a standard Vite + React application in the `frontend/` folder.
 
 ---
 
-# 🚀 Getting Started (Beginner Guide)
+# 🚀 Quick Start (Docker - Recommended)
 
-This guide is for anyone setting up the project for the first time on **Windows**. Follow these steps exactly.
+The easiest way to give this project to a friend or set it up on a new machine is using **Docker**. They don't need to install Python, Node, or manage virtual environments.
 
----
+### 📥 0. Download the Project
+[**⬇️ Download Project Zip**][https://www.transfernow.net/dl/20260406FMTe5wBT] 
+*Unzip this file before proceeding to the steps below.*
 
-## Step 1: Install the Tools
-You need three main things installed on your computer:
-1. **Git**: Used to download and update code. [Download here](https://git-scm.com/download/win).
-2. **Python 3.12**: The language the "brain" of the app uses. [Download here](https://www.python.org/downloads/release/python-3123/). 
-   - **IMPORTANT**: During installation, check the box that says **"Add Python to PATH"**.
-3. **Node.js**: Used for the "visual" part of the app. [Download here (LTS version)](https://nodejs.org/).
+### 1. Prerequisites
+- Install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+- Create a `.env` file inside the `backend/` folder and add your HuggingFace token:
+  ```env
+  HF_TOKEN=your_token_here
+  ```
+- **IMPORTANT - Hugging Face Authorization:**
+  Before Pyannote can diarize audio, you MUST visit Hugging Face and accept the user conditions for these two models using the same account attached to your token:
+  1. [pyannote/speaker-diarization-3.1](https://huggingface.co/pyannote/speaker-diarization-3.1)
+  2. [pyannote/segmentation-3.0](https://huggingface.co/pyannote/segmentation-3.0)
 
----
-
-## Step 2: Clone the Project
-1. Open **PowerShell** (Click Start, type "PowerShell").
-2. Type these commands one by one:
-   ```powershell
-   cd Desktop
-   git clone https://github.com/kAIzenEd/track_repo.git
-   cd track_repo
-   ```
-
----
-
-## Step 3: Setup the Backend (The "Brain")
-The app uses two separate environments to keep things clean and avoid crashes.
-
-### 3a. Main Environment (Transcription)
-1. In the same PowerShell window, type:
-   ```powershell
-   python -m venv venv
-   .\venv\Scripts\activate
-   pip install uv
-   uv pip install -r requirements-main.txt
-   ```
-2. Keep this window open.
-
-### 3b. Diarization Environment (Speaker Identification)
-1. Open a **SECOND** PowerShell window.
-2. Navigate to the project folder:
-   ```powershell
-   cd Desktop/track_repo
-   ```
-3. Type these commands:
-   ```powershell
-   python -m venv backend\services\diarize\venv_pyannote
-   .\backend\services\diarize\venv_pyannote\Scripts\activate
-   pip install uv
-   uv pip install -r requirements-diarize.txt
-   ```
-4. You can close this second window after it finishes.
+### 2. Run with One Command
+Open a terminal in the project root and run:
+```bash
+docker-compose up --build -d
+```
+- **App Dashboard:** [http://localhost](http://localhost) (or port 80/3000)
+- **API Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
 
-## Step 4: Configure & Initialize
-1. Go back to your **FIRST** PowerShell window (the one where `(venv)` is visible on the left).
-2. Create your storage folders:
-   ```powershell
-   mkdir -p backend/storage/audio
-   mkdir -p backend/storage/transcripts
-   ```
-3. Initialize the database:
-   ```powershell
-   python -m backend.init_db
-   ```
-4. **HuggingFace Token**: 
-   - Create a file named `.env` inside the `backend` folder.
-   - Go to [Hugging Face](https://huggingface.co/settings/tokens) and get a token.
-   - Paste this inside your `.env` file: `HF_TOKEN=your_token_here`
+# 🛠 Manual Setup (Advanced / Legacy)
 
----
+If you prefer to run the project without Docker, follow these steps exactly.
 
-## Step 5: Run the App!
-You need two things running at the same time:
+## Step 1: Install Tools
+Install **Git**, **Python 3.12** (add to PATH), and **Node.js** (LTS).
 
-### 1. The Backend
-In your PowerShell window with `(venv)` active:
+## Step 2: Setup Environments
+This project uses a **Two-Venv Architecture** to avoid dependency conflicts.
+
+### Backend (Main)
 ```powershell
-uvicorn backend.main:app --reload
+python -m venv venv
+.\venv\Scripts\activate
+pip install uv
+uv pip install -r requirements-main.txt
 ```
 
-### 2. The Frontend (The Visuals)
-1. Open a **NEW** PowerShell window.
-2. Type:
-   ```powershell
-   cd Desktop/track_repo/frontend
-   npm install
-   npm run dev
-   ```
-3. Open your browser and go to the link it shows (usually `http://localhost:5173`).
+### Diarization Service
+```powershell
+python -m venv backend/services/diarize/venv_pyannote
+.\backend\services\diarize\venv_pyannote\Scripts\activate
+pip install uv
+uv pip install -r requirements-diarize.txt
+```
+
+## Step 3: Run Manually
+You need **three** things running in separate terminals:
+
+1. **Diarize Service:** `uvicorn backend.services.diarize.api:app --port 8001`
+2. **Main Backend:** `uvicorn backend.main:app --reload`
+3. **Frontend:** `cd frontend && npm install && npm run dev`
 
 ---
 
-# 🛠 Project Architecture (Technical)
+## Project Architecture (Technical)
 
-This project uses a **Two-Venv Architecture**...
+kAI Track is now a containerized multi-service application:
+- **Frontend:** Nginx/React (Port 80)
+- **Backend:** FastAPI/WhisperX (Port 8000)
+- **Diarization:** FastAPI/Pyannote (Port 8001 - Internal)
+- **Ollama:** Local LLM Server (Port 11434)
 
