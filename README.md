@@ -32,7 +32,7 @@ The application uses the famous `Pyannote` AI to figure out who is speaking. To 
 4. Click **"Create new token"** (Type: Read) and copy the long token code starting with `hf_...`.
 
 ### Step 4: Configure Your `.env` Secret
-1. Open the `kAI_track/backend/` folder.
+1. Open the **main project folder** (the one containing `docker-compose.yml`).
 2. Create a brand new file exactly named: `.env` (make sure Windows doesn't name it `.env.txt`).
 3. Open it in Notepad and paste your token exactly like this:
    ```env
@@ -42,10 +42,7 @@ The application uses the famous `Pyannote` AI to figure out who is speaking. To 
 
 ### Step 5: Start the App! 🟢
 1. Open your terminal (**PowerShell** or Command Prompt).
-2. Change into the project directory (where the `docker-compose.yml` file is):
-   ```bash
-   cd path/to/the/folder/kAI_track
-   ```
+2. Change into your project folder. (e.g., `cd track_repo-main` or `cd kAI_track`).
 3. Run the magical Docker command:
    ```bash
    docker-compose up --build -d

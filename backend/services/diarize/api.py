@@ -19,7 +19,7 @@ torch.backends.cudnn.allow_tf32 = True
 MODEL_ID = "pyannote/speaker-diarization-community-1"
 
 # Automatically load the HF token from the environment variable (or .env if copied over)
-load_dotenv(dotenv_path="/app/backend/.env")
+load_dotenv(dotenv_path="/app/.env")
 token = os.getenv("HF_TOKEN")
 
 app = FastAPI(title="kAI Track - Diarization Microservice")

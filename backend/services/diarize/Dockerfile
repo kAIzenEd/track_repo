@@ -14,7 +14,7 @@ RUN pip install fastapi uvicorn python-multipart requests
 COPY ./backend/services/diarize /app/backend/services/diarize
 
 # We also copy .env file to inject HF_TOKEN if locally stored
-COPY ./backend/.env /app/backend/.env
+COPY .env /app/.env
 
 EXPOSE 8001
 
