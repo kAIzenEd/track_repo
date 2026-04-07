@@ -1,6 +1,9 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import GlassPanel from "./ui/GlassPanel";
+import AIInsightsPanel from "./AIInsightsPanel";
+import TranscriptTable from "./TranscriptTable";
+import { BACKEND_URL } from "../api/backend";
 
 /**
  * TranscriptModal — quick-view floating modal, opened from sidebar.
@@ -13,7 +16,24 @@ import GlassPanel from "./ui/GlassPanel";
  *
  * Closes on: backdrop click, Escape key, or × button.
  */
-export default function TranscriptModal({ meeting, segments, onClose }) {
+export default function TranscriptModal({ meeting, segments, insights, onClose }) {
+  const [loadingAI, setLoadingAI] = useState(false);
+  const [localInsights, setLocalInsights] = useState(insights);
+  
+  useEffect(() => { setLocalInsights(insights); }, [insights]);
+
+  async function handleGenerateInsights() {
+    setLoadingAI(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/meetings/${meeting.id}/generate-insights`, { method: "POST" });
+      const data = await res.json();
+      setLocalInsights(data);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoadingAI(false);
+  }
+
   useEffect(() => {
     if (!meeting) return;
     const handleKey = (e) => { if (e.key === "Escape") onClose(); };
@@ -112,54 +132,26 @@ export default function TranscriptModal({ meeting, segments, onClose }) {
                 </button>
               </div>
 
-              {/* Transcript table */}
-              <div style={{ overflowY: "auto", flex: 1 }}>
-                {!segments || segments.length === 0 ? (
-                  <p style={{ color: "var(--text-muted)", fontSize: 14 }}>
-                    No transcript data available.
-                  </p>
-                ) : (
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-                    <thead>
-                      <tr>
-                        {["Speaker", "Start", "End", "Text"].map((h) => (
-                          <th
-                            key={h}
-                            style={{
-                              textAlign: "left",
-                              padding: "8px 12px",
-                              fontWeight: 700,
-                              borderBottom: "1px solid var(--glass-border)",
-                              color: "var(--text-main)",
-                              width: h === "Text" ? undefined : h === "Speaker" ? 100 : 70,
-                            }}
-                          >
-                            {h}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {segments.map((seg, i) => (
-                        <tr
-                          key={i}
-                          style={{ borderBottom: "1px solid rgba(255,255,255,0.22)" }}
-                        >
-                          <td style={{ padding: "9px 12px", fontFamily: "monospace", fontSize: 12 }}>
-                            {seg.speaker || "—"}
-                          </td>
-                          <td style={{ padding: "9px 12px", fontFamily: "monospace", fontSize: 12 }}>
-                            {seg.start}s
-                          </td>
-                          <td style={{ padding: "9px 12px", fontFamily: "monospace", fontSize: 12 }}>
-                            {seg.end}s
-                          </td>
-                          <td style={{ padding: "9px 12px" }}>{seg.text}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+                <button 
+                  className="glass-button" 
+                  style={{ padding: "6px 12px", fontSize: 13 }} 
+                  onClick={handleGenerateInsights}
+                >
+                  {loadingAI ? "Generating..." : "Generate AI Insights"}
+                </button>
+              </div>
+
+              <div style={{ display: "flex", gap: "20px", overflowY: "auto", flex: 1 }}>
+                
+                <div style={{ flex: 2, overflowY: "auto", height: "100%" }}>
+                  <TranscriptTable segments={segments} />
+                </div>
+
+                <div style={{ flex: 1, overflowY: "auto", height: "100%" }}>
+                  <AIInsightsPanel insights={localInsights} />
+                </div>
+
               </div>
             </GlassPanel>
           </motion.div>

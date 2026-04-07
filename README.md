@@ -1,155 +1,97 @@
-# kAI Track
+# kAI Track Assistant 🎙️🤖
 
-> AI-driven meeting assistant MVP for structured transcription and meeting intelligence.
+> **An offline, AI-driven meeting assistant for structured transcription, speaker diarization, and meeting intelligence.**
 
----
-
-## Introduction
-
-**kAI Track** is a local-first AI-powered meeting assistant designed to transcribe meeting audio into structured, timestamped text. It stores meeting history and lays the foundation for advanced features such as speaker diarization, summarization, and action-item extraction.
-
-This MVP is built with:
-
-- **Backend:** FastAPI  
-- **Database:** SQLite  
-- **Frontend:** React (Vite)  
-- **Transcription Engine:** Whisper  
+kAI Track leverages state-of-the-art AI models to automatically transcribe audio, identify *who* spoke *when* (diarization), and pass the transcripts to a local multi-agent LLM pipeline to generate summaries, action items, and process improvements—**all while running 100% locally and privately on your machine.**
 
 ---
 
-## Table of Contents
+## 🚀 The "Zero-Error" Setup Guide
 
-- [Current Features](#current-features-sprint-1-complete)
-- [Upcoming Features](#upcoming-features-sprint-2-and-beyond)
-- [Project Structure](#project-structure)
-- [Installation & Setup](#installation--setup)
-  - [1. Install Git](#1-install-git)
-  - [2. Authenticate with GitHub](#2-authenticate-with-github)
-  - [3. Clone the Repository](#3-clone-the-repository)
-  - [4. Install Python 3.12](#4-install-python-312)
-  - [5. Create Virtual Environment](#5-create-and-activate-a-python-virtual-environment)
-  - [6. Install uv](#6-install-uv)
-  - [7. Install Python Dependencies](#7-install-python-dependencies)
-  - [8. Create Storage Directories](#8-create-storage-directories)
-  - [9. Initialize the Database](#9-initialize-the-database)
-  - [10. Run the Backend](#10-run-the-backend-fastapi)
-  - [11. Run the Frontend](#11-frontend-install-and-run-react--vite)
-  - [12. End-to-End Testing](#12-test-end-to-end)
-  - [13. Verification Commands](#13-useful-verification-commands)
+You do **NOT** need to install Python, Node.js, `pip`, `npm`, or configure tricky computer "PATH" variables. This project relies entirely on **Docker** to automatically create sterile, perfect environments for the AI models on your system. 
 
----
+Follow these steps exactly, and the app will boot flawlessly. If you get an error, re-read these steps!
 
-## Current Features (Sprint 1 Complete)
+### Step 1: Download the Project
+1. If you are downloading a `.zip` file: Right-click the `.zip` file and select **"Extract All"**. Open the extracted folder.
+2. If you are using GitHub: Run `git clone https://github.com/kAIzenEd/track_repo.git` in your terminal, then type `cd kAI_track`.
 
-- Audio upload and transcription using Whisper (accurate and fast modes)
-- Timestamped transcript segmentation
-- Automatic saving of transcripts to:
-  - Local JSON files
-  - SQLite database
-- Meeting history API endpoints
-- React MVP dashboard:
-  - Drag-and-drop audio upload
-  - Structured transcript display
-  - Meeting archive sidebar with retrieval
+### Step 2: Install Docker Desktop 🐳
+The engine that runs the isolated app.
+1. Download [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+2. Run the installer. 
+3. **Important**: Open the Docker Desktop application after it installs! You must see a **Green Light** (or "Engine Running") in the bottom corner of Docker Desktop before proceeding to the next steps.
 
----
+### Step 3: Get Your Hugging Face Key 🔑
+The application uses the famous `Pyannote` AI to figure out who is speaking. To use it for free, you must quickly authorize your account.
+1. Go to [HuggingFace.co](https://huggingface.co/) and create a free account.
+2. **You MUST visit these two pages and click "Agree and access repository"** (if you don't do this, the app will crash):
+   - ➜ [Accept Pyannote Speaker Diarization 3.1](https://huggingface.co/pyannote/speaker-diarization-3.1)
+   - ➜ [Accept Pyannote Segmentation 3.0](https://huggingface.co/pyannote/segmentation-3.0)
+3. Go to your [Hugging Face Access Tokens Page](https://huggingface.co/settings/tokens).
+4. Click **"Create new token"** (Type: Read) and copy the long token code starting with `hf_...`.
 
-## Upcoming Features (Sprint 2 and Beyond)
+### Step 4: Configure Your `.env` Secret
+1. Open the `kAI_track/backend/` folder.
+2. Create a brand new file exactly named: `.env` (make sure Windows doesn't name it `.env.txt`).
+3. Open it in Notepad and paste your token exactly like this:
+   ```env
+   HF_TOKEN=hf_your_long_token_code_goes_here
+   ```
+4. Save the file.
 
-- Speaker diarization ("who said what")
-- Speaker labeling and renaming in the UI
-- LLM-powered meeting summarization
+### Step 5: Start the App! 🟢
+1. Open your terminal (**PowerShell** or Command Prompt).
+2. Change into the project directory (where the `docker-compose.yml` file is):
+   ```bash
+   cd path/to/the/folder/kAI_track
+   ```
+3. Run the magical Docker command:
+   ```bash
+   docker-compose up --build -d
+   ```
+   *Note: Go grab a coffee! ☕ If this is your very first time running it, Docker will download Ubuntu, Node, Python, WhisperX, Pyannote, and Ollama LLM models from scratch. It could take 60+ minutes depending on your internet connection. Next time you run the app, it will boot in seconds.*
 
-## Sprint 3 (Complete)
-- **Local AI Agents:** Fully integrated Ollama for private, on-device Insights generation.
-- **Agent Roles:** Setup CrewAI / Multi-agent pipelines to handle distinct summary, action item, and process improvement tasks.
+### Step 6: Use It!
+Once your terminal finishes and returns you to the prompt:
+- 🖥️ **Open your Browser to:** [http://localhost](http://localhost) (or `http://localhost:3000`) to view the beautiful User Interface.
+- ⚙️ **API Documentation:** [http://localhost:8000/docs](http://localhost:8000/docs)
 
----
-
-## Project Architecture
-
-This project uses a **Two-Venv Architecture** to prevent dependency conflicts between `faster-whisper` and `pyannote.audio`.
-
-1. **Main Environment (`venv`)**:
-   - Runs the FastAPI web server, SQLite database, and WhisperX transcription.
-   - Dependencies: `requirements-main.txt`
-2. **Pyannote Environment (`venv_pyannote`)**:
-   - Strictly used by the backend via a subprocess to perform speaker diarization.
-   - Dependencies: `requirements-diarize.txt`
-
-The frontend is a standard Vite + React application in the `frontend/` folder.
+*(To turn it off entirely later, open the terminal in the folder and type: `docker-compose down`)*
 
 ---
 
-# 🚀 Quick Start (Docker - Recommended)
+## 🧠 What's Happening Under The Hood?
+This project uses an advanced **Docker Multi-Container Microservice Architecture**:
+- **`frontend` Container:** Compiles the React + Vite dashboard and serves it hyper-fast via an Alpine Nginx proxy that securely routes API calls to the backend automatically.
+- **`backend` Container:** Runs FastAPI and WhisperX to transcribe your audio cleanly. Handles database tracking and storage bindings.
+- **`diarize` Container:** Because Pyannote requires immensely specific PyTorch dependencies, it has been carved out into a 30-line FastAPI microservice! The main backend talks to it via HTTP to get timestamps of different speakers securely, preventing dependency hell.
+- **`ollama` Container:** Serves local LLMs (`nemotron-3-nano:4b`) using your system's hardware. The LLMs read the meeting transcript, debate privately using DeepSeek reasoning tracks, and finally output perfectly structured Meeting Summaries and Action Items.
 
-The easiest way to give this project to a friend or set it up on a new machine is using **Docker**. They don't need to install Python, Node, or manage virtual environments.
-
-### 📥 0. Download the Project
-[**⬇️ Download Project Zip**][https://www.transfernow.net/dl/20260406FMTe5wBT] 
-*Unzip this file before proceeding to the steps below.*
-
-### 1. Prerequisites
-- Install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
-- Create a `.env` file inside the `backend/` folder and add your HuggingFace token:
-  ```env
-  HF_TOKEN=your_token_here
-  ```
-- **IMPORTANT - Hugging Face Authorization:**
-  Before Pyannote can diarize audio, you MUST visit Hugging Face and accept the user conditions for these two models using the same account attached to your token:
-  1. [pyannote/speaker-diarization-3.1](https://huggingface.co/pyannote/speaker-diarization-3.1)
-  2. [pyannote/segmentation-3.0](https://huggingface.co/pyannote/segmentation-3.0)
-
-### 2. Run with One Command
-Open a terminal in the project root and run:
-```bash
-docker-compose up --build -d
-```
-- **App Dashboard:** [http://localhost](http://localhost) (or port 80/3000)
-- **API Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
+The data (`audio`, `transcripts`, `sqlite databases`, and `LLM model weights`) is physically mounted back to your host machine's hard drive so you permanently own your data.
 
 ---
 
-# 🛠 Manual Setup (Advanced / Legacy)
+## 🛠️ Advanced / Developer Setup (Manual Workflow)
+If you refuse to use Docker or are explicitly developing new backend code requiring `pdb` breakpoints, follow this logic.
 
-If you prefer to run the project without Docker, follow these steps exactly.
+### Dependencies
+1. Install Python 3.10-3.12 (Add to PATH) and install `uv`.
+2. Install Node.js (LTS).
 
-## Step 1: Install Tools
-Install **Git**, **Python 3.12** (add to PATH), and **Node.js** (LTS).
+### Environment 1: Core App
+1. In the root, create: `python -m venv venv` and activate it.
+2. `uv pip install -r requirements-main.txt`
+3. Run: `uvicorn backend.main:app --reload`
 
-## Step 2: Setup Environments
-This project uses a **Two-Venv Architecture** to avoid dependency conflicts.
+### Environment 2: Isolated Diarization
+1. Create a 2nd terminal.
+2. Create: `python -m venv backend/services/diarize/venv_pyannote` and activate it.
+3. `uv pip install -r requirements-diarize.txt`
+4. Run: `uvicorn backend.services.diarize.api:app --port 8001`
+*(The backend tries `DIARIZE_URL=http://localhost:8001/diarize`. If it fails, it has a built-in hybrid fallback to attempt to find the `venv_pyannote/python.exe` and execute it automatically).*
 
-### Backend (Main)
-```powershell
-python -m venv venv
-.\venv\Scripts\activate
-pip install uv
-uv pip install -r requirements-main.txt
-```
-
-### Diarization Service
-```powershell
-python -m venv backend/services/diarize/venv_pyannote
-.\backend\services\diarize\venv_pyannote\Scripts\activate
-pip install uv
-uv pip install -r requirements-diarize.txt
-```
-
-## Step 3: Run Manually
-You need **three** things running in separate terminals:
-
-1. **Diarize Service:** `uvicorn backend.services.diarize.api:app --port 8001`
-2. **Main Backend:** `uvicorn backend.main:app --reload`
-3. **Frontend:** `cd frontend && npm install && npm run dev`
-
----
-
-## Project Architecture (Technical)
-
-kAI Track is now a containerized multi-service application:
-- **Frontend:** Nginx/React (Port 80)
-- **Backend:** FastAPI/WhisperX (Port 8000)
-- **Diarization:** FastAPI/Pyannote (Port 8001 - Internal)
-- **Ollama:** Local LLM Server (Port 11434)
-
+### Frontend
+1. Create a 3rd terminal.
+2. `cd frontend && npm install`
+3. `npm run dev`

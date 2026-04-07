@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # -----------------------------------------------------------------
+  # 1. Frontend: Nginx static compiled layer
+  # -----------------------------------------------------------------
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"        # Exposed on standard HTTP port for the user
+      - "3000:80"      # Exposed on 3000 just in case 80 is occupied
+    depends_on:
+      - backend
+    restart: always
+
+  # -----------------------------------------------------------------
+  # 2. Backend: Core FastAPI / DB / Whisper logic
+  # -----------------------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      # Expose storage data directly onto the host so the user can easily see MP3s
+      - ./storage:/app/storage
+      # Expose the db
+      - ./backend:/app/backend
+    environment:
+      # Route Diarization cross-container
+      - DIARIZE_URL=http://diarize:8001/diarize
+      # Route Ollama cross-container
+      - OLLAMA_URL=http://ollama:11434
+    depends_on:
+      - diarize
+      - ollama
+    restart: always
+
+  # -----------------------------------------------------------------
+  # 3. Diarization: Isolated Pyannote Python Env
+  # -----------------------------------------------------------------
+  diarize:
+    build:
+      context: .
+      dockerfile: ./backend/services/diarize/Dockerfile
+    volumes:
+      # It needs identical mount paths to the backend so the absolute path works
+      - ./storage:/app/storage
+    environment:
+      # Automatically pass the HF_TOKEN from the .env file to the container
+      - HF_TOKEN=${HF_TOKEN}
+    restart: always
+
+  # -----------------------------------------------------------------
+  # 4. Local AI: Ollama Daemon
+  # -----------------------------------------------------------------
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: always
+    # Automatically pull Nemotron locally on container start
+    entrypoint: [ "/bin/sh", "-c", "ollama serve & sleep 5 ; ollama pull nemotron-3-nano:4b ; wait" ]
+
+volumes:
+  # Persistent volume for massive LLM weights to avoid re-downloading on resets
+  ollama_data:

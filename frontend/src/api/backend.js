@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const BACKEND_URL = "http://172.28.255.166:8000";
+export const BACKEND_URL = "/api";
 
 export async function fetchMeetings() {
   const res = await axios.get(`${BACKEND_URL}/meetings`);

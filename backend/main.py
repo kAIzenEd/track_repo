@@ -20,7 +20,8 @@ from backend.services.diarization_router import diarize_with_pyannote, Diarizati
 from backend.services.assign_speakers import assign_speakers
 from backend.services.transcribe import transcribe_audio
 from backend.db import get_db
-from backend.models import Meeting
+from backend.models import Meeting, MeetingInsights
+from backend.services.ai_insights import transcript_to_text, generate_insights
 
 # ---- App ----
 app = FastAPI(
@@ -196,7 +197,7 @@ async def transcribe(
             "total": total_time,
         },
         "transcript_saved_as": transcript_filename,
-        "segments": enriched_segments,
+        "segments": enriched_segments
     }
 
 
@@ -226,11 +227,36 @@ def get_meeting_by_id(meeting_id: int, db: Session = Depends(get_db)):
     if not meeting:
         raise HTTPException(status_code=404, detail="Meeting not found")
 
+    insight = db.query(MeetingInsights).filter(
+        MeetingInsights.meeting_id == meeting.id
+    ).first()
+
+    print("[FETCH INSIGHTS]", insight)
+    
+    parsed_json = {}
+    if insight and insight.action_items_json:
+        try:
+            parsed_json = json.loads(insight.action_items_json)
+        except:
+            pass
+            
+    if isinstance(parsed_json, list):
+        action_items = parsed_json
+        improvements = []
+    else:
+        action_items = parsed_json.get("actions", [])
+        improvements = parsed_json.get("improvements", [])
+
     return {
         "id": meeting.id,
         "audio_file": meeting.audio_file,
         "created_at": meeting.created_at.isoformat() if meeting.created_at else None,
         "transcript": meeting.transcript,
+        "insights": {
+            "summary": insight.summary_text if insight else "",
+            "action_items": action_items,
+            "improvements": improvements
+        }
     }
 
 
@@ -288,3 +314,61 @@ async def update_meeting(meeting_id: int, body: UpdateMeetingRequest, db: Sessio
                 print(f"Failed to update JSON backup {json_file}: {e}")
 
     return {"id": meeting_id, "segments": body.segments}
+
+@app.get("/debug/ai")
+def debug_ai():
+    from backend.services.ai_insights import generate_insights
+
+    test_text = "Alice: We need to finish the report. Bob: I will handle it."
+
+    result = generate_insights(test_text)
+
+    return result
+
+@app.post("/meetings/{meeting_id}/generate-insights")
+def generate_meeting_insights(meeting_id: int, db: Session = Depends(get_db)):
+    meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    transcript = meeting.transcript
+
+    from backend.services.ai_insights import transcript_to_text, generate_insights
+
+    transcript_text = transcript_to_text(transcript)
+
+    insights = generate_insights(transcript_text)
+
+    summary = insights.get("summary", "")
+    action_items = insights.get("action_items", [])
+    improvements = insights.get("improvements", [])
+
+    existing = db.query(MeetingInsights).filter(
+        MeetingInsights.meeting_id == meeting.id
+    ).first()
+
+    if existing:
+        existing.summary_text = summary
+        existing.action_items_json = json.dumps({
+            "actions": action_items,
+            "improvements": improvements
+        })
+    else:
+        new = MeetingInsights(
+            meeting_id=meeting.id,
+            summary_text=summary,
+            action_items_json=json.dumps({
+                "actions": action_items,
+                "improvements": improvements
+            })
+        )
+        db.add(new)
+
+    db.commit()
+
+    return {
+        "summary": summary,
+        "action_items": action_items,
+        "improvements": improvements
+    }

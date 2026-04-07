@@ -1,0 +1,26 @@
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+venv/
+venv_pyannote/
+env/
+.env
+
+# Node
+node_modules/
+dist/
+
+# Logs and databases
+*.sqlite
+*.db
+*.log
+
+# Data Volumes (these will be mounted dynamically)
+storage/
+models/
+
+# OS files
+.DS_Store
+Thumbs.db

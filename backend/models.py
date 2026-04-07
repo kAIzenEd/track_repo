@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, DateTime, JSON
+from sqlalchemy import Column, Integer, String, DateTime, JSON, ForeignKey, Text
+from sqlalchemy.orm import relationship
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from backend.db import Base
@@ -17,3 +18,16 @@ class Meeting(Base):
 
     #Timestamp of save
     created_at = Column(DateTime, default = datetime.now(ZoneInfo("Asia/Kolkata")))
+
+class MeetingInsights(Base):
+    __tablename__ = "meeting_insights"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    meeting_id = Column(Integer, ForeignKey("meetings.id"), unique=True)
+
+    summary_text = Column(Text)
+
+    action_items_json = Column(Text)
+
+    meeting = relationship("Meeting")

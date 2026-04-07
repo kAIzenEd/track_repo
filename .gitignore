@@ -2,28 +2,31 @@
 node_modules/
 venv/
 venv_pyannote/
+env/
 
-# Build and environment
+# Data and Secret Files (DO NOT COMMIT)
 .env
+storage/
+backend/storage/
+models/
+*.mp4
+*.mp3
+*.wav
+*.aac
+*.db
+*.sqlite
+*.db-journal
+
+# Python & Node Compilations
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+dist/
+build/
 
-# Mac
+# OS and IDE Files
 .DS_Store
-
-# Local storage and DB
-backend/storage/audio/
-backend/storage/transcripts/
-backend/storage/*.db
-backend/storage/*.db-journal
-
-# Logs
-logs/
-*.log
-
-# Misc
-.pytest_cache/
+Thumbs.db
 .vscode/
 .idea/
+.pytest_cache/

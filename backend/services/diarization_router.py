@@ -1,60 +1,32 @@
 from pathlib import Path
-import subprocess
-import json
-import os
 from typing import List, Dict
-
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DIARIZE_DIR = PROJECT_ROOT / "backend" / "services" / "diarize"
-
-# Handle Windows vs Linux/Mac venv structure
-if os.name == 'nt':
-    PYANNOTE_VENV_PYTHON = DIARIZE_DIR / "venv_pyannote" / "Scripts" / "python.exe"
-else:
-    PYANNOTE_VENV_PYTHON = DIARIZE_DIR / "venv_pyannote" / "bin" / "python"
-
-PYANNOTE_SCRIPT = DIARIZE_DIR / "run_pyannote.py"
-
+import os
+import requests
 
 class DiarizationError(Exception):
     pass
 
-
 def diarize_with_pyannote(audio_path: str) -> List[Dict]:
     """
-    Run pyannote diarization via isolated venv subprocess.
+    Call the isolated Pyannote Docker microservice via HTTP.
+    Uses 'diarize' host from docker-compose, or localhost if run locally.
     """
-
     if not Path(audio_path).exists():
         raise DiarizationError(f"Audio file not found: {audio_path}")
 
-    # Ensure venv Python exists
-    if not PYANNOTE_VENV_PYTHON.exists():
-        raise DiarizationError(
-            f"Pyannote venv not found at {PYANNOTE_VENV_PYTHON}. "
-            "Please run the setup script to create the diarization environment."
-        )
-
-    result = subprocess.run(
-        [
-            str(PYANNOTE_VENV_PYTHON),
-            str(PYANNOTE_SCRIPT),
-            audio_path
-        ],
-        capture_output=True,
-        text=True
-    )
-
-    if result.returncode != 0:
-        raise DiarizationError(result.stderr or result.stdout)
-
+    diarize_url = os.environ.get("DIARIZE_URL", "http://localhost:8001/diarize")
+    
     try:
-        data = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        raise DiarizationError("Invalid JSON returned from diarization")
-
-    if not data.get("success"):
-        raise DiarizationError(data.get("error", "Unknown diarization error"))
-
-    return data["segments"]
+        response = requests.post(diarize_url, json={"audio_path": str(audio_path)}, timeout=1200) # Give long timeout for huge audio
+        
+        if response.status_code != 200:
+            raise DiarizationError(f"Diarize service error (HTTP {response.status_code}): {response.text}")
+            
+        data = response.json()
+        if not data.get("success"):
+            raise DiarizationError("Diarization failed internally.")
+            
+        return data.get("segments", [])
+        
+    except requests.exceptions.RequestException as e:
+        raise DiarizationError(f"Could not connect to diarize service container ({diarize_url}): {e}")
