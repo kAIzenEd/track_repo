@@ -31,3 +31,17 @@ class MeetingInsights(Base):
     action_items_json = Column(Text)
 
     meeting = relationship("Meeting")
+
+class MeetingActionItems(Base):
+    __tablename__ = "meeting_action_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    meeting_id = Column(Integer, ForeignKey("meetings.id"), unique=True)
+    
+    # Stores the Pass 1 bulleted list generated strictly from transcript
+    extracted_tasks_raw = Column(Text, default="")
+    
+    # Stores the final JSON array output after user assigns roles
+    final_assigned_tasks = Column(JSON, default=[])
+
+    meeting = relationship("Meeting")

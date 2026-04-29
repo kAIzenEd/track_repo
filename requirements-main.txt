@@ -9,3 +9,5 @@ whisperx
 faster-whisper
 numpy<2
 python-dotenv
+transformers==4.39.3
+

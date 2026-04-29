@@ -1,7 +1,15 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker 
 
-DATABASE_DIR = "sqlite:///backend/storage/kai_track.db"
+import os
+
+# Dynamically route DB depending on Docker vs Local manual runs
+if os.path.exists("/app/storage"):
+    DATABASE_DIR = "sqlite:////app/storage/kai_track.db"
+else:
+    os.makedirs("backend/storage", exist_ok=True)
+    DATABASE_DIR = "sqlite:///backend/storage/kai_track.db"
+
 
 engine = create_engine(DATABASE_DIR, connect_args = {"check_same_thread": False})
 

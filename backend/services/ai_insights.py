@@ -43,21 +43,7 @@ def generate_insights(transcript_text: str):
     summary_prompt = f"Transcript:\n{transcript_text}\n\nTask: Provide a concise summary of the decisions and main points from this meeting. You MUST use black filled dot bullet points (•) and each bullet point MUST start on a new line. Do not write paragraphs. Do not use JSON. Write plain text only."
     summary_text = run_agent(summary_prompt)
 
-    # 2. ACTION ITEMS
-    print("[AI INSIGHTS] Generating Action Items...")
-    actions_prompt = f"Transcript:\n{transcript_text}\n\nTask: Extract all action items and tasks assigned to people in this meeting. You MUST extract AT LEAST 5 action items (you can extract more if available). If there are fewer than 5 explicit tasks, deduce implied tasks or general next steps to meet the minimum of 5. Use EXACTLY this bullet format and nothing else:\n- Assignee Name: Task description\n\nExample:\n- Kevin: Research the server costs.\n- Unassigned: Update Terms of Service.\n\nDo NOT write anything else."
-    actions_raw = run_agent(actions_prompt)
-    
-    action_items = []
-    for line in actions_raw.split("\n"):
-        line = line.strip()
-        if line.startswith("-") or line.startswith("*"):
-            line = line[1:].strip()
-            if ":" in line:
-                assignee, task = line.split(":", 1)
-                action_items.append({"assignee": assignee.strip("[]* "), "task": task.strip()})
-            elif len(line) > 5:
-                action_items.append({"assignee": "Unassigned", "task": line})
+    # Actions have been decoupled to ActionAgent
 
     # 3. IMPROVEMENTS
     print("[AI INSIGHTS] Generating Improvements...")
@@ -77,6 +63,5 @@ def generate_insights(transcript_text: str):
 
     return {
         "summary": summary_text,
-        "action_items": action_items,
         "improvements": improvements
     }

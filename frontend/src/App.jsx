@@ -6,6 +6,7 @@ import UploadBox from "./components/UploadBox";
 import MeetingSidebar from "./components/MeetingSidebar";
 import MeetingDetailPanel from "./components/MeetingDetailPanel";
 import AIInsightsPanel from "./components/AIInsightsPanel";
+import ActionItemsPanel from "./components/ActionItemsPanel";
 import TranscriptTable from "./components/TranscriptTable";
 import MeetingHistoryPage from "./components/MeetingHistoryPage";
 import GlassPanel from "./components/ui/GlassPanel";
@@ -191,14 +192,15 @@ export default function App() {
             </div>
           </GlassPanel>
 
-          {/* Right Panel: AI Insights */}
-          <GlassPanel style={{ padding: "28px", height: "85vh", overflowY: "auto" }}>
+          {/* Right Panel: AI Insights & Action Items */}
+          <GlassPanel style={{ padding: "28px", height: "85vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: "24px" }}>
             <AIInsightsPanel
               meeting={modalMeeting}
               insights={modalInsights}
               loading={loadingAI}
               onGenerate={handleGenerateInsights}
             />
+            {modalMeeting && <ActionItemsPanel meetingId={modalMeeting.id} />}
           </GlassPanel>
         </div>
       </div>

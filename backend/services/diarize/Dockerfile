@@ -13,8 +13,7 @@ RUN pip install fastapi uvicorn python-multipart requests
 
 COPY ./backend/services/diarize /app/backend/services/diarize
 
-# We also copy .env file to inject HF_TOKEN if locally stored
-COPY .env /app/.env
+# We don't need to COPY the .env; Docker Compose will pass it via 'environment'
 
 EXPOSE 8001
 

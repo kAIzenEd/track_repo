@@ -54,3 +54,25 @@ export async function updateMeeting(id, segments) {
   const res = await axios.patch(`${BACKEND_URL}/meetings/${id}`, { segments });
   return res.data;
 }
+
+export async function generateMeetingInsights(id) {
+  const res = await axios.post(`${BACKEND_URL}/meetings/${id}/generate-insights`);
+  return res.data;
+}
+
+export async function getMeetingActionItemsState(id) {
+  const res = await axios.get(`${BACKEND_URL}/meetings/${id}/action-items-state`);
+  return res.data;
+}
+
+export async function generateActionItemsRaw(id) {
+  const res = await axios.post(`${BACKEND_URL}/meetings/${id}/generate-raw-tasks`);
+  return res.data;
+}
+
+export async function finalizeActionItems(id, userInput) {
+  const res = await axios.post(`${BACKEND_URL}/meetings/${id}/finalize-task-assignments`, {
+    user_input: userInput
+  });
+  return res.data;
+}

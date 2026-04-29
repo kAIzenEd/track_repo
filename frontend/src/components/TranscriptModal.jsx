@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import GlassPanel from "./ui/GlassPanel";
 import AIInsightsPanel from "./AIInsightsPanel";
+import ActionItemsPanel from "./ActionItemsPanel";
 import TranscriptTable from "./TranscriptTable";
 import { BACKEND_URL } from "../api/backend";
 
@@ -148,8 +149,9 @@ export default function TranscriptModal({ meeting, segments, insights, onClose }
                   <TranscriptTable segments={segments} />
                 </div>
 
-                <div style={{ flex: 1, overflowY: "auto", height: "100%" }}>
+                <div style={{ flex: 1, overflowY: "auto", height: "100%", display: "flex", flexDirection: "column", gap: "20px" }}>
                   <AIInsightsPanel insights={localInsights} />
+                  <ActionItemsPanel meetingId={meeting.id} />
                 </div>
 
               </div>

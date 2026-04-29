@@ -19,14 +19,17 @@ def transcribe_audio(audio_path: str, mode: str = "accurate"):
     else:
         model_name = "large-v3-turbo"
         compute_type = "float16"
+        
+    # CPUs do not support float16 for WhisperX/ctranslate2. Drop to int8.
+    if device == "cpu":
+        compute_type = "int8"
 
     print(f"Tryin' real hard to load this stuff bro: {model_name} ({mode})")
 
     model = whisperx.load_model(
         model_name,
         device=device,
-        compute_type=compute_type,
-        vad_method="silero"
+        compute_type=compute_type
     )
 
     print("Tryna transcribe dis audio bruv......")

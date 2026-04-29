@@ -20,8 +20,12 @@ from backend.services.diarization_router import diarize_with_pyannote, Diarizati
 from backend.services.assign_speakers import assign_speakers
 from backend.services.transcribe import transcribe_audio
 from backend.db import get_db
-from backend.models import Meeting, MeetingInsights
+from backend.models import Meeting, MeetingInsights, MeetingActionItems
 from backend.services.ai_insights import transcript_to_text, generate_insights
+from backend.init_db import init_db
+
+# Initialize database tables
+init_db()
 
 # ---- App ----
 app = FastAPI(
@@ -94,7 +98,9 @@ async def transcribe(
         print(f"Transcription completed in {transcribe_time}s ({mode})")
     except Exception as e:
         # If transcription fails, do not leave partial DB records
-        raise HTTPException(status_code=500, detail=f"Transcription error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Transcription error: {str(e)}")
 
     # Format transcript segments (clean text, rounded timestamps)
     transcript_segments = [
@@ -231,21 +237,18 @@ def get_meeting_by_id(meeting_id: int, db: Session = Depends(get_db)):
         MeetingInsights.meeting_id == meeting.id
     ).first()
 
-    print("[FETCH INSIGHTS]", insight)
-    
-    parsed_json = {}
+    action_items_parsed = []
+    action_items_state = db.query(MeetingActionItems).filter(MeetingActionItems.meeting_id == meeting.id).first()
+    if action_items_state and action_items_state.final_assigned_tasks:
+        action_items_parsed = action_items_state.final_assigned_tasks
+
+    improvements = []
     if insight and insight.action_items_json:
         try:
             parsed_json = json.loads(insight.action_items_json)
+            improvements = parsed_json.get("improvements", [])
         except:
             pass
-            
-    if isinstance(parsed_json, list):
-        action_items = parsed_json
-        improvements = []
-    else:
-        action_items = parsed_json.get("actions", [])
-        improvements = parsed_json.get("improvements", [])
 
     return {
         "id": meeting.id,
@@ -254,7 +257,7 @@ def get_meeting_by_id(meeting_id: int, db: Session = Depends(get_db)):
         "transcript": meeting.transcript,
         "insights": {
             "summary": insight.summary_text if insight else "",
-            "action_items": action_items,
+            "action_items": action_items_parsed,
             "improvements": improvements
         }
     }
@@ -351,7 +354,6 @@ def generate_meeting_insights(meeting_id: int, db: Session = Depends(get_db)):
     if existing:
         existing.summary_text = summary
         existing.action_items_json = json.dumps({
-            "actions": action_items,
             "improvements": improvements
         })
     else:
@@ -359,7 +361,6 @@ def generate_meeting_insights(meeting_id: int, db: Session = Depends(get_db)):
             meeting_id=meeting.id,
             summary_text=summary,
             action_items_json=json.dumps({
-                "actions": action_items,
                 "improvements": improvements
             })
         )
@@ -369,6 +370,69 @@ def generate_meeting_insights(meeting_id: int, db: Session = Depends(get_db)):
 
     return {
         "summary": summary,
-        "action_items": action_items,
         "improvements": improvements
     }
+
+@app.get("/meetings/{meeting_id}/action-items-state")
+def get_action_items_state(meeting_id: int, db: Session = Depends(get_db)):
+    state = db.query(MeetingActionItems).filter(MeetingActionItems.meeting_id == meeting_id).first()
+    if not state:
+        return {"extracted_tasks_raw": "", "final_assigned_tasks": []}
+    return {
+        "extracted_tasks_raw": state.extracted_tasks_raw,
+        "final_assigned_tasks": state.final_assigned_tasks
+    }
+
+@app.post("/meetings/{meeting_id}/generate-raw-tasks")
+def generate_raw_tasks(meeting_id: int, db: Session = Depends(get_db)):
+    meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    from backend.services.ai_insights import transcript_to_text
+    from backend.services.agents.action_agent import ActionAgent
+    
+    transcript_text = transcript_to_text(meeting.transcript)
+    agent = ActionAgent()
+    raw_tasks = agent.extract_raw_tasks(transcript_text)
+    
+    state = db.query(MeetingActionItems).filter(MeetingActionItems.meeting_id == meeting_id).first()
+    if state:
+        state.extracted_tasks_raw = raw_tasks
+        # Reset final tasks when re-generating raw
+        state.final_assigned_tasks = []
+    else:
+        state = MeetingActionItems(
+            meeting_id=meeting.id,
+            extracted_tasks_raw=raw_tasks,
+            final_assigned_tasks=[]
+        )
+        db.add(state)
+        
+    db.commit()
+    return {"extracted_tasks_raw": raw_tasks}
+
+class FinalizeTasksRequest(BaseModel):
+    user_input: str
+
+@app.post("/meetings/{meeting_id}/finalize-task-assignments")
+def finalize_task_assignments(meeting_id: int, req: FinalizeTasksRequest, db: Session = Depends(get_db)):
+    meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+        
+    state = db.query(MeetingActionItems).filter(MeetingActionItems.meeting_id == meeting_id).first()
+    if not state or not state.extracted_tasks_raw:
+        raise HTTPException(status_code=400, detail="No raw tasks found. Generate raw tasks first.")
+
+    from backend.services.ai_insights import transcript_to_text
+    from backend.services.agents.action_agent import ActionAgent
+    
+    transcript_text = transcript_to_text(meeting.transcript)
+    agent = ActionAgent()
+    final_tasks = agent.assign_tasks_by_role(transcript_text, state.extracted_tasks_raw, req.user_input)
+    
+    state.final_assigned_tasks = final_tasks
+    db.commit()
+    
+    return {"final_assigned_tasks": final_tasks}

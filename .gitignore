@@ -17,6 +17,12 @@ models/
 *.sqlite
 *.db-journal
 
+# Logs and compilations
+*.log
+*_code.txt
+*compilation.txt
+backend_logs.txt
+
 # Python & Node Compilations
 __pycache__/
 *.py[cod]

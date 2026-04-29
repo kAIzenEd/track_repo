@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:3.10-bullseye
 
 # Install system dependencies for audio processing (ffmpeg)
 # build-essential and git might be needed to compile some dependencies for whisperx
