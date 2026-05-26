@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # -----------------------------------------------------------------
   # 1. Frontend: Nginx static compiled layer
@@ -52,6 +50,11 @@ services:
     environment:
       # Automatically pass the HF_TOKEN from the .env file to the container
       - HF_TOKEN=${HF_TOKEN}
+      # Limit torch CPU parallelism to reduce memory spikes on Docker Desktop
+      - OMP_NUM_THREADS=2
+      - MKL_NUM_THREADS=2
+    # PyTorch/pyannote often crash without enough shared memory (connection reset, no HTTP response)
+    shm_size: "2gb"
     restart: always
 
   # -----------------------------------------------------------------

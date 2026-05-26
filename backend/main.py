@@ -122,9 +122,12 @@ async def transcribe(
         diarize_time = round(time.time() - t0, 2)
         print(f"Diarization completed in {diarize_time}s (segments: {len(diarization_segments)})")
     except DiarizationError as de:
-        # Diarization is mandatory — surface a clean 500 with the error detail
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Diarization error: {str(de)}")
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Unexpected diarization error: {e}")
 
     # ------------------------------------------------------------------
